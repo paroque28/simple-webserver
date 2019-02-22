@@ -52,13 +52,19 @@ void log(int type, char *s1, char *s2, int num)
 	char logbuffer[BUFSIZE*2];
 
 	switch (type) {
-	case ERROR: (void)sprintf(logbuffer,"ERROR: %s:%s Errno=%d exiting pid=%d",s1, s2, errno,getpid()); break;
+	case ERROR: 
+        (void)sprintf(logbuffer,"ERROR: %s:%s Errno=%d exiting pid=%d",s1, s2, errno,getpid());
+        (void)printf("ERROR: %s:%s Errno=%d exiting pid=%d",s1, s2, errno,getpid());
+        break;
 	case SORRY: 
 		(void)sprintf(logbuffer, "<HTML><BODY><H1>Web Server Sorry: %s %s</H1></BODY></HTML>\r\n", s1, s2);
 		(void)write(num,logbuffer,strlen(logbuffer));
 		(void)sprintf(logbuffer,"SORRY: %s:%s",s1, s2); 
 		break;
-	case LOG: (void)sprintf(logbuffer," INFO: %s:%s:%d",s1, s2,num); break;
+	case LOG: 
+        (void)sprintf(logbuffer," INFO: %s:%s:%d",s1, s2,num);
+        (void)printf(" INFO: %s:%s:%d",s1, s2,num);
+        break;
 	}	
 	
 	if((fd = open("server.log", O_CREAT| O_WRONLY | O_APPEND,0644)) >= 0) {
@@ -134,9 +140,17 @@ void web(int fd, int hit)
 	exit(1);
 }
 
+void intHandler(int a) {
+    //keepRunning = false;
+    exit(1);	
+}
 
 int main(int argc, char **argv)
 {
+    struct sigaction act;
+    act.sa_handler = intHandler;
+    sigaction(SIGINT, &act, NULL);
+
 	int i, port, pid, listenfd, socketfd, hit;
 	size_t length;
 	static struct sockaddr_in cli_addr; 
@@ -144,7 +158,7 @@ int main(int argc, char **argv)
 
 	if( argc < 3  || argc > 3 || !strcmp(argv[1], "-?") ) {
 		(void)printf("usage: server [port] [server directory] &"
-	"\tExample: server 80 ./ &\n\n"
+	"\tExample: server 80 ./test_dir &\n\n"
 	"\tOnly Supports:");
 		for(i=0;extensions[i].ext != 0;i++)
 			(void)printf(" %s",extensions[i].ext);
@@ -165,8 +179,10 @@ int main(int argc, char **argv)
 		exit(4);
 	}
 
-	if(fork() != 0)
-		return 0; 
+	//if(fork() != 0){
+	//	printf("Main thread closing");
+    //    return 0; 
+    //}
 	(void)signal(SIGCLD, SIG_IGN); 
 	(void)signal(SIGHUP, SIG_IGN); 
 	for(i=0;i<32;i++)
