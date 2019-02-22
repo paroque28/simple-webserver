@@ -1,0 +1,14 @@
+[Unit]
+Description=Simple Server
+After=network.target
+
+[Service]
+Type=simple
+# Another Type option: forking
+WorkingDirectory=/app
+ExecStart=/app/server 80 /app/test_dir
+Restart=on-failure
+# Other Restart options: or always, on-abort, etc
+
+[Install]
+WantedBy=multi-user.target
