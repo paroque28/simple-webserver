@@ -1,1 +1,1 @@
-docker build . -t simple-server
+docker build . -t webserver

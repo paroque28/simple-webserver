@@ -1,1 +1,1 @@
-docker run -it --privileged=true -p 80:80 -v /sys/fs/cgroup:/sys/fs/cgroup:ro simple-server 
+docker run -it --privileged=true -p 80:80 -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /app/default:$(pwd)/default:ro webserver 

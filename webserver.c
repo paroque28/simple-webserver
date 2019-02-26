@@ -61,7 +61,7 @@ struct {
 	{"tar", "image/tar" },  
 	{"htm", "text/html" },  
 	{"html","text/html" },  
-	{"php", "image/php" },  
+	{"php", "text/php" },  
 	{"cgi", "text/cgi"  },  
 	{"asp","text/asp"   },  
 	{"jsp", "image/jsp" },  
