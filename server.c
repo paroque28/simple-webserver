@@ -1,4 +1,4 @@
-[200~/*
+/*
 BSD 3-Clause License
 
 Copyright (c) 2015-2019, Pablo Rodriguez Quesada, Diego, Giovanny
@@ -71,6 +71,8 @@ struct {
 	{"iso","image/iso"   },
 	{0,0} };
 
+char log_file_path[BUFSIZE*2] = "/var/log/webserver.log";
+
 void log(int type, char *s1, char *s2, int num)
 {
 	int fd ;
@@ -79,7 +81,6 @@ void log(int type, char *s1, char *s2, int num)
 	switch (type) {
 	case ERROR: 
         (void)sprintf(logbuffer,"ERROR: %s:%s Errno=%d exiting pid=%d",s1, s2, errno,getpid());
-        (void)printf("ERROR: %s:%s Errno=%d exiting pid=%d",s1, s2, errno,getpid());
         break;
 	case SORRY: 
 		(void)sprintf(logbuffer, "<HTML><BODY><H1>Web Server Sorry: %s %s</H1></BODY></HTML>\r\n", s1, s2);
@@ -88,15 +89,15 @@ void log(int type, char *s1, char *s2, int num)
 		break;
 	case LOG: 
         (void)sprintf(logbuffer," INFO: %s:%s:%d",s1, s2,num);
-        (void)printf(" INFO: %s:%s:%d",s1, s2,num);
         break;
 	}	
 	
-	if((fd = open("server.log", O_CREAT| O_WRONLY | O_APPEND,0644)) >= 0) {
+	if((fd = open(log_file_path, O_CREAT| O_WRONLY | O_APPEND,0644)) >= 0) {
 		(void)write(fd,logbuffer,strlen(logbuffer)); 
 		(void)write(fd,"\n",1);      
 		(void)close(fd);
 	}
+	printf(logbuffer);
 	if(type == ERROR || type == SORRY) exit(3);
 }
 
