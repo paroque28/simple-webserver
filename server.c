@@ -67,8 +67,8 @@ struct {
 	{"jsp", "image/jsp" },  
 	{"xml", "text/xml"  },  
 	{"js","text/js"     },
-   {"css","test/css"   }, 
-
+    {"css","test/css"   }, 
+	{"iso","image/iso"   },
 	{0,0} };
 
 void log(int type, char *s1, char *s2, int num)
