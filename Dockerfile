@@ -1,6 +1,8 @@
 FROM centos/systemd
 
 # Install make
+RUN yum clean all
+RUN rpm --rebuilddb
 RUN yum -y update
 RUN yum -y install make gcc
 RUN echo "root" | passwd --stdin root 
