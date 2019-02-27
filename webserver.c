@@ -71,9 +71,27 @@ struct {
 	{"iso","image/iso"   },
 	{0,0} };
 
-char log_file_path[BUFSIZE*2] = "/var/log/webserver.log";
 
-void log(int type, char *s1, char *s2, int num)
+
+char * ROOT_FOLDER= "ROOT_DIR";
+char * PORT = "PORT";
+char * LOG_FILE = "LOGFILE";
+
+
+char * directory = NULL;
+char * log_file_path = NULL;
+char * port_str = NULL;
+
+void slice_str(const char * str, char * buffer, size_t start, size_t end)
+{
+    size_t j = 0;
+    for ( size_t i = start; i <= end; ++i ) {
+        buffer[j++] = str[i];
+    }
+    buffer[j] = 0;
+}
+
+void log_event(int type, char *s1, char *s2, int num)
 {
 	int fd ;
 	char logbuffer[BUFSIZE*2];
@@ -97,7 +115,7 @@ void log(int type, char *s1, char *s2, int num)
 		(void)write(fd,"\n",1);      
 		(void)close(fd);
 	}
-	printf(logbuffer);
+	printf("%s",logbuffer);
 	if(type == ERROR || type == SORRY) exit(3);
 }
 
@@ -110,7 +128,7 @@ void web(int fd, int hit)
 
 	ret =read(fd,buffer,BUFSIZE); 
 	if(ret == 0 || ret == -1) {
-		log(SORRY,"failed to read browser request","",fd);
+		log_event(SORRY,"failed to read browser request","",fd);
 	}
 	if(ret > 0 && ret < BUFSIZE)	
 		buffer[ret]=0;	
@@ -119,10 +137,10 @@ void web(int fd, int hit)
 	for(i=0;i<ret;i++)	
 		if(buffer[i] == '\r' || buffer[i] == '\n')
 			buffer[i]='*';
-	log(LOG,"request",buffer,hit);
+	log_event(LOG,"request",buffer,hit);
 
 	if( strncmp(buffer,"GET ",4) && strncmp(buffer,"get ",4) )
-		log(SORRY,"Only simple GET operation supported",buffer,fd);
+		log_event(SORRY,"Only simple GET operation supported",buffer,fd);
 
 	for(i=4;i<BUFSIZE;i++) { 
 		if(buffer[i] == ' ') { 
@@ -133,7 +151,7 @@ void web(int fd, int hit)
 
 	for(j=0;j<i-1;j++) 	
 		if(buffer[j] == '.' && buffer[j+1] == '.')
-			log(SORRY,"Parent directory (..) path names not supported",buffer,fd);
+			log_event(SORRY,"Parent directory (..) path names not supported",buffer,fd);
 
 	if( !strncmp(&buffer[0],"GET /\0",6) || !strncmp(&buffer[0],"get /\0",6) ) 
 		(void)strcpy(buffer,"GET /index.html");
@@ -147,12 +165,12 @@ void web(int fd, int hit)
 			break;
 		}
 	}
-	if(fstr == 0) log(SORRY,"file extension type not supported",buffer,fd);
+	if(fstr == 0) log_event(SORRY,"file extension type not supported",buffer,fd);
 
 	if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) 
-		log(SORRY, "failed to open file",&buffer[5],fd);
+		log_event(SORRY, "failed to open file",&buffer[5],fd);
 
-	log(LOG,"SEND",&buffer[5],hit);
+	log_event(LOG,"SEND",&buffer[5],hit);
 
 	(void)sprintf(buffer,"HTTP/1.0 200 OK\r\nContent-Type: %s\r\n\r\n", fstr);
 	(void)write(fd,buffer,strlen(buffer));
@@ -170,7 +188,15 @@ void intHandler(int a) {
     //keepRunning = false;
     exit(1);	
 }
-
+int check_phrase(const char * line, const char * phrase, int len_line, char * result){
+	if (!strncmp(line,phrase,strlen(phrase)-1 )){
+			printf("%s", line);
+			slice_str(line, result,strlen(phrase)+1,len_line-2);
+			directory[len_line-strlen(phrase)-2]= '\0';
+			return 1;
+		} 
+	return 0;
+}
 int main(int argc, char **argv)
 {
     struct sigaction act;
@@ -178,30 +204,64 @@ int main(int argc, char **argv)
     sigaction(SIGINT, &act, NULL);
 
 	int i, port, pid, listenfd, socketfd, hit;
-	size_t length;
+	socklen_t socket_length;
 	static struct sockaddr_in cli_addr; 
 	static struct sockaddr_in serv_addr;
 
-	if( argc < 3  || argc > 3 || !strcmp(argv[1], "-?") ) {
-		(void)printf("usage: server [port] [server directory] &"
-	"\tExample: server 80 ./test_dir &\n\n"
-	"\tOnly Supports:");
+	if(  argc < 1  || (argc == 2 && !strcmp(argv[1], "-h")) || argc > 1) {
+		printf("Use configuration file at /etc/webserver\nOnly Supports:");
 		for(i=0;extensions[i].ext != 0;i++)
-			(void)printf(" %s",extensions[i].ext);
-
-		(void)printf("\n\tNot Supported: directories / /etc /bin /lib /tmp /usr /dev /sbin \n"
-		    );
+			printf(" %s",extensions[i].ext);
+			printf("\n\tNot Supported: directories / /etc /bin /lib /tmp /usr /dev /sbin \n");
 		exit(0);
 	}
-	if( !strncmp(argv[2],"/"   ,2 ) || !strncmp(argv[2],"/etc", 5 ) ||
-	    !strncmp(argv[2],"/bin",5 ) || !strncmp(argv[2],"/lib", 5 ) ||
-	    !strncmp(argv[2],"/tmp",5 ) || !strncmp(argv[2],"/usr", 5 ) ||
-	    !strncmp(argv[2],"/dev",5 ) || !strncmp(argv[2],"/sbin",6) ){
-		(void)printf("ERROR: Bad top directory %s, see server -?\n",argv[2]);
+	// Read configuration file
+	FILE * fp;
+    char * line = NULL;
+    size_t len = 0;
+    ssize_t read;
+	fp = fopen("/etc/webserver/config.conf", "r");
+    if (fp == NULL){
+		printf("Couldn't  open configuration file /etc/webserver/config.conf\nCheck permissions:\n$ ls -la /etc/webserver/config.conf\n");
+        exit(EXIT_FAILURE);
+	}
+	directory = malloc(sizeof(char)*BUFSIZE*2);
+	port_str = malloc(sizeof(char)*BUFSIZE*2);
+	log_file_path=malloc(sizeof(char)*BUFSIZE*2);
+    while ((read = getline(&line, &len, fp)) != -1) {
+		// Get ROOT Folder
+		if (check_phrase(line,ROOT_FOLDER,read,directory)){
+			printf("Directory: %s\n", directory);
+		}
+		//Get PORT
+		else if (check_phrase(line,PORT,read,port_str)){
+			port = atoi(port_str);
+			printf("Port: %d\n", port);
+		}
+		//Get Logfile
+		else if (check_phrase(line,LOG_FILE,read,log_file_path)){
+			printf("Log File: %s\n", log_file_path);
+		}
+    }
+
+	//Close file
+    fclose(fp);
+    if (line)
+        free(line);
+	if (!log_file_path){
+		log_file_path = "/var/log/webserver.log";
+	}
+	if( !strncmp(directory,"/"   ,2 ) || !strncmp(directory,"/etc", 5 ) ||
+	    !strncmp(directory,"/bin",5 ) || !strncmp(directory,"/lib", 5 ) ||
+	    !strncmp(directory,"/tmp",5 ) || !strncmp(directory,"/usr", 5 ) ||
+	    !strncmp(directory,"/dev",5 ) || !strncmp(directory,"/sbin",6) ){
+		printf("ERROR: Bad top directory %s, see server -?\n",directory);
 		exit(3);
 	}
-	if(chdir(argv[2]) == -1){ 
-		(void)printf("ERROR: Can't Change to directory %s\n",argv[2]);
+	printf("%s", directory);
+	if(chdir(directory) == -1){ 
+		printf("Can't Change to directory %s: ",directory);
+		perror("ERROR "); 
 		exit(4);
 	}
 
@@ -215,28 +275,27 @@ int main(int argc, char **argv)
 		(void)close(i);	
 	(void)setpgrp();	
 
-	log(LOG,"http server starting",argv[1],getpid());
+	log_event(LOG,"http server starting",argv[1],getpid());
 
 	if((listenfd = socket(AF_INET, SOCK_STREAM,0)) <0)
-		log(ERROR, "system call","socket",0);
-	port = atoi(argv[1]);
+		log_event(ERROR, "system call","socket",0);
 	if(port < 0 || port >60000)
-		log(ERROR,"Invalid port number try [1,60000]",argv[1],0);
+		log_event(ERROR,"Invalid port number try [1,60000]",argv[1],0);
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	serv_addr.sin_port = htons(port);
 	if(bind(listenfd, (struct sockaddr *)&serv_addr,sizeof(serv_addr)) <0)
-		log(ERROR,"system call","bind",0);
+		log_event(ERROR,"system call","bind",0);
 	if( listen(listenfd,64) <0)
-		log(ERROR,"system call","listen",0);
+		log_event(ERROR,"system call","listen",0);
 
 	for(hit=1; ;hit++) {
-		length = sizeof(cli_addr);
-		if((socketfd = accept(listenfd, (struct sockaddr *)&cli_addr, &length)) < 0)
-			log(ERROR,"system call","accept",0);
+		socket_length = (socklen_t) sizeof(cli_addr);
+		if((socketfd = accept(listenfd, (struct sockaddr *)&cli_addr, &socket_length)) < 0)
+			log_event(ERROR,"system call","accept",0);
 
 		if((pid = fork()) < 0) {
-			log(ERROR,"system call","fork",0);
+			log_event(ERROR,"system call","fork",0);
 		}
 		else {
 			if(pid == 0) {

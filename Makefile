@@ -1,4 +1,4 @@
 #  Makefile for server
 webserver:	webserver.c
-		gcc webserver.c -o webserver
+		gcc -g -ggdb webserver.c -o webserver
 
