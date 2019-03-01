@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 # Another Type option: forking
 WorkingDirectory=/app
-ExecStart=/app/webserver
+ExecStart=/usr/bin/webserver
 Restart=on-failure
 # Other Restart options: or always, on-abort, etc
 

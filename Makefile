@@ -1,4 +1,7 @@
 #  Makefile for server
-webserver:	webserver.c
-		gcc -g -ggdb webserver.c -o webserver
-
+default: webserver
+webserver: src/webserver.c
+		gcc -g -ggdb src/webserver.c -o webserver
+.PHONY : clean
+clean:
+		rm webserver

@@ -85,7 +85,8 @@ char * port_str = NULL;
 void slice_str(const char * str, char * buffer, size_t start, size_t end)
 {
     size_t j = 0;
-    for ( size_t i = start; i <= end; ++i ) {
+	size_t i;
+    for ( i = start; i <= end; ++i ) {
         buffer[j++] = str[i];
     }
     buffer[j] = 0;
@@ -260,15 +261,12 @@ int main(int argc, char **argv)
 	}
 	printf("%s", directory);
 	if(chdir(directory) == -1){ 
-		printf("Can't Change to directory %s: ",directory);
+		printf("Can't Change to directory %s: \n",directory);
 		perror("ERROR "); 
 		exit(4);
 	}
 
-	//if(fork() != 0){
-	//	printf("Main thread closing");
-    //    return 0; 
-    //}
+
 	(void)signal(SIGCLD, SIG_IGN); 
 	(void)signal(SIGHUP, SIG_IGN); 
 	for(i=0;i<32;i++)
