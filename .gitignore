@@ -1,3 +1,4 @@
 #Don't upload log files
 *.log
-server
+webserver
+default/test.iso

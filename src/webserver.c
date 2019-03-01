@@ -68,6 +68,7 @@ struct {
 	{"xml", "text/xml"  },  
 	{"js","text/js"     },
     {"css","test/css"   }, 
+	{"ico","image/ico"   },
 	{"iso","image/iso"   },
 	{0,0} };
 
@@ -216,7 +217,11 @@ int main(int argc, char **argv)
 			printf("\n\tNot Supported: directories / /etc /bin /lib /tmp /usr /dev /sbin \n");
 		exit(0);
 	}
+
+
+
 	// Read configuration file
+	//------------------------------------
 	FILE * fp;
     char * line = NULL;
     size_t len = 0;
@@ -244,7 +249,6 @@ int main(int argc, char **argv)
 			printf("Log File: %s\n", log_file_path);
 		}
     }
-
 	//Close file
     fclose(fp);
     if (line)
@@ -252,6 +256,9 @@ int main(int argc, char **argv)
 	if (!log_file_path){
 		log_file_path = "/var/log/webserver.log";
 	}
+
+	//------------------------------------
+
 	if( !strncmp(directory,"/"   ,2 ) || !strncmp(directory,"/etc", 5 ) ||
 	    !strncmp(directory,"/bin",5 ) || !strncmp(directory,"/lib", 5 ) ||
 	    !strncmp(directory,"/tmp",5 ) || !strncmp(directory,"/usr", 5 ) ||
@@ -273,12 +280,15 @@ int main(int argc, char **argv)
 		(void)close(i);	
 	(void)setpgrp();	
 
-	log_event(LOG,"http server starting",argv[1],getpid());
+
+
+
+	log_event(LOG,"HTTP server starting",port_str,getpid());
 
 	if((listenfd = socket(AF_INET, SOCK_STREAM,0)) <0)
 		log_event(ERROR, "system call","socket",0);
-	if(port < 0 || port >60000)
-		log_event(ERROR,"Invalid port number try [1,60000]",argv[1],0);
+	if(port < 0 || port >65000)
+		log_event(ERROR,"Invalid port number try [1,65000]",port_str,0);
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	serv_addr.sin_port = htons(port);
@@ -288,6 +298,7 @@ int main(int argc, char **argv)
 		log_event(ERROR,"system call","listen",0);
 
 	for(hit=1; ;hit++) {
+		printf("%d hit",hit);
 		socket_length = (socklen_t) sizeof(cli_addr);
 		if((socketfd = accept(listenfd, (struct sockaddr *)&cli_addr, &socket_length)) < 0)
 			log_event(ERROR,"system call","accept",0);
