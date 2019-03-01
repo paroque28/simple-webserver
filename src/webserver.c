@@ -291,10 +291,9 @@ int main(int argc, char **argv)
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	serv_addr.sin_port = htons(port);
-	while(! bind(listenfd, (struct sockaddr *)&serv_addr,sizeof(serv_addr)) <0){
+	if (bind(listenfd, (struct sockaddr *)&serv_addr,sizeof(serv_addr)) <0){
 		perror("Error on bind");
-		log_event(LOG,"system call","bind",0);
-		sleep(10);
+		log_event(ERROR,"system call","bind",0);
 	}
 	if( listen(listenfd,64) <0)
 		log_event(ERROR,"system call","listen",0);
@@ -317,7 +316,7 @@ int main(int argc, char **argv)
 			if(pid == 0) {
 				(void)close(listenfd);
 				web(socketfd,hit);
-				exit(0);
+				(void)close(socketfd);
 			} else {
 				(void)close(socketfd);
 			}
