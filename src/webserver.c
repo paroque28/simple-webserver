@@ -117,7 +117,7 @@ void log_event(int type, char *s1, char *s2, int num)
 		(void)write(fd,"\n",1);      
 		(void)close(fd);
 	}
-	printf("%s",logbuffer);
+	fprintf( stderr, logbuffer );
 	if(type == ERROR || type == SORRY) exit(3);
 }
 
@@ -192,7 +192,6 @@ void intHandler(int a) {
 }
 int check_phrase(const char * line, const char * phrase, int len_line, char * result){
 	if (!strncmp(line,phrase,strlen(phrase)-1 )){
-			printf("%s", line);
 			slice_str(line, result,strlen(phrase)+1,len_line-2);
 			directory[len_line-strlen(phrase)-2]= '\0';
 			return 1;
@@ -237,16 +236,13 @@ int main(int argc, char **argv)
     while ((read = getline(&line, &len, fp)) != -1) {
 		// Get ROOT Folder
 		if (check_phrase(line,ROOT_FOLDER,read,directory)){
-			printf("Directory: %s\n", directory);
 		}
 		//Get PORT
 		else if (check_phrase(line,PORT,read,port_str)){
 			port = atoi(port_str);
-			printf("Port: %d\n", port);
 		}
 		//Get Logfile
 		else if (check_phrase(line,LOG_FILE,read,log_file_path)){
-			printf("Log File: %s\n", log_file_path);
 		}
     }
 	//Close file
@@ -257,6 +253,9 @@ int main(int argc, char **argv)
 		log_file_path = "/var/log/webserver.log";
 	}
 
+	log_event(LOG, "Directory", directory ,0);
+	log_event(LOG, "Port", port_str ,0);
+	log_event(LOG, "LOG Folder", log_file_path ,0);
 	//------------------------------------
 
 	if( !strncmp(directory,"/"   ,2 ) || !strncmp(directory,"/etc", 5 ) ||
@@ -266,7 +265,6 @@ int main(int argc, char **argv)
 		printf("ERROR: Bad top directory %s, see server -?\n",directory);
 		exit(3);
 	}
-	printf("%s", directory);
 	if(chdir(directory) == -1){ 
 		printf("Can't Change to directory %s: \n",directory);
 		perror("ERROR "); 
@@ -298,7 +296,6 @@ int main(int argc, char **argv)
 		log_event(ERROR,"system call","listen",0);
 
 	for(hit=1; ;hit++) {
-		printf("%d hit",hit);
 		socket_length = (socklen_t) sizeof(cli_addr);
 		if((socketfd = accept(listenfd, (struct sockaddr *)&cli_addr, &socket_length)) < 0)
 			log_event(ERROR,"system call","accept",0);
