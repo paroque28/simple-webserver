@@ -1,1 +1,1 @@
-docker run -it --privileged=true -p 80:80 -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v $(pwd)/default:/app/default:ro  -v $(pwd)/webserver.conf:/etc/webserver/config.conf webserver
+docker run -it --privileged=true -p 80:8001 -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v $(pwd)/default:/app/default:ro  -v $(pwd)/webserver.conf:/etc/webserver/config.conf webserver

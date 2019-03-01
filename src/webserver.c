@@ -76,9 +76,9 @@ struct {
 
 
 
-char * ROOT_FOLDER= "ROOT_DIR";
-char * PORT = "PORT";
-char * LOG_FILE = "LOGFILE";
+char * ROOT_FOLDER= "ROOT_DIR=";
+char * PORT = "PORT=";
+char * LOG_FILE = "LOGFILE=";
 
 
 char * directory = NULL;
@@ -206,8 +206,8 @@ void intHandler(int a) {
 }
 int check_phrase(const char * line, const char * phrase, int len_line, char * result){
 	if (!strncmp(line,phrase,strlen(phrase)-1 )){
-			slice_str(line, result,strlen(phrase)+1,len_line-2);
-			directory[len_line-strlen(phrase)-2]= '\0';
+			slice_str(line, result,strlen(phrase),len_line-1);
+			result[len_line-strlen(phrase)-1]= '\0';
 			return 1;
 		} 
 	return 0;
