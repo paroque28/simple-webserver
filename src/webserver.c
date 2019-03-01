@@ -121,9 +121,14 @@ void log_event(int type, char *s1, char *s2, int num)
 	}
 	fprintf( stderr, "%s",logbuffer );
 	fprintf( stderr, "\n" );
-	#ifdef PARALLEL
-	if(type == ERROR || type == SORRY) exit(3);
+	
+	if(type == ERROR
+	#ifdef PARALLEL 
+	|| type == SORRY
 	#endif
+	) exit(3);
+	
+	
 }
 
 void web(int fd, int hit)
