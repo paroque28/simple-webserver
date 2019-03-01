@@ -48,6 +48,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SORRY 43
 #define LOG   44
 
+//#define PARALLEL
+
 struct {
 	char *ext;
 	char *filetype;
@@ -119,7 +121,9 @@ void log_event(int type, char *s1, char *s2, int num)
 	}
 	fprintf( stderr, "%s",logbuffer );
 	fprintf( stderr, "\n" );
+	#ifdef PARALLEL
 	if(type == ERROR || type == SORRY) exit(3);
+	#endif
 }
 
 void web(int fd, int hit)
@@ -184,7 +188,9 @@ void web(int fd, int hit)
 #ifdef LINUX
 	sleep(1);
 #endif
+#ifdef PARALLEL
 	exit(1);
+#endif
 }
 
 void intHandler(int a) {
@@ -308,7 +314,8 @@ int main(int argc, char **argv)
     		log_event(ERROR, "Setsocketopts", "Error code" , status);
 		if (status = setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
     		log_event(ERROR, "Setsocketopts", "Error code" , status);
-
+// Multiple forks
+#ifdef PARALLEL
 		if((pid = fork()) < 0) {
 			log_event(ERROR,"system call","fork",0);
 		}
@@ -317,9 +324,17 @@ int main(int argc, char **argv)
 				(void)close(listenfd);
 				web(socketfd,hit);
 				(void)close(socketfd);
+				exit(0);
 			} else {
 				(void)close(socketfd);
 			}
 		}
+#endif
+
+//Serial Mode
+#ifndef PARALLEL
+		web(socketfd,hit);
+		(void)close(socketfd);
+#endif
 	}
 }
