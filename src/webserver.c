@@ -82,7 +82,7 @@ char * LOG_FILE = "LOGFILE";
 char * directory = NULL;
 char * log_file_path = NULL;
 char * port_str = NULL;
-
+int socketfd;
 void slice_str(const char * str, char * buffer, size_t start, size_t end)
 {
     size_t j = 0;
@@ -117,7 +117,8 @@ void log_event(int type, char *s1, char *s2, int num)
 		(void)write(fd,"\n",1);      
 		(void)close(fd);
 	}
-	fprintf( stderr, logbuffer );
+	fprintf( stderr, "%s",logbuffer );
+	fprintf( stderr, "\n" );
 	if(type == ERROR || type == SORRY) exit(3);
 }
 
@@ -187,7 +188,9 @@ void web(int fd, int hit)
 }
 
 void intHandler(int a) {
-    //keepRunning = false;
+    perror ("SIGINT received");
+	log_event(LOG, "SIGINT received", "" ,a);
+	(void)close(socketfd);
     exit(1);	
 }
 int check_phrase(const char * line, const char * phrase, int len_line, char * result){
@@ -200,11 +203,7 @@ int check_phrase(const char * line, const char * phrase, int len_line, char * re
 }
 int main(int argc, char **argv)
 {
-    struct sigaction act;
-    act.sa_handler = intHandler;
-    sigaction(SIGINT, &act, NULL);
-
-	int i, port, pid, listenfd, socketfd, hit;
+	int i, port, pid, listenfd, hit;
 	socklen_t socket_length;
 	static struct sockaddr_in cli_addr; 
 	static struct sockaddr_in serv_addr;
@@ -272,8 +271,10 @@ int main(int argc, char **argv)
 	}
 
 
-	(void)signal(SIGCLD, SIG_IGN); 
-	(void)signal(SIGHUP, SIG_IGN); 
+	// (void)signal(SIGCLD, SIG_IGN); 
+	// (void)signal(SIGHUP, SIG_IGN); 
+	signal(SIGINT, intHandler); 
+	signal(SIGKILL, intHandler);
 	for(i=0;i<32;i++)
 		(void)close(i);	
 	(void)setpgrp();	
@@ -290,8 +291,11 @@ int main(int argc, char **argv)
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	serv_addr.sin_port = htons(port);
-	if(bind(listenfd, (struct sockaddr *)&serv_addr,sizeof(serv_addr)) <0)
-		log_event(ERROR,"system call","bind",0);
+	while(! bind(listenfd, (struct sockaddr *)&serv_addr,sizeof(serv_addr)) <0){
+		perror("Error on bind");
+		log_event(LOG,"system call","bind",0);
+		sleep(10);
+	}
 	if( listen(listenfd,64) <0)
 		log_event(ERROR,"system call","listen",0);
 
@@ -299,6 +303,12 @@ int main(int argc, char **argv)
 		socket_length = (socklen_t) sizeof(cli_addr);
 		if((socketfd = accept(listenfd, (struct sockaddr *)&cli_addr, &socket_length)) < 0)
 			log_event(ERROR,"system call","accept",0);
+		int status;
+		int enable = 1;
+		if (status = setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+    		log_event(ERROR, "Setsocketopts", "Error code" , status);
+		if (status = setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+    		log_event(ERROR, "Setsocketopts", "Error code" , status);
 
 		if((pid = fork()) < 0) {
 			log_event(ERROR,"system call","fork",0);
@@ -307,6 +317,7 @@ int main(int argc, char **argv)
 			if(pid == 0) {
 				(void)close(listenfd);
 				web(socketfd,hit);
+				exit(0);
 			} else {
 				(void)close(socketfd);
 			}
