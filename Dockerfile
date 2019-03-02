@@ -20,6 +20,6 @@ RUN mv /app/webserver /usr/bin
 RUN mkdir -p /etc/webserver
 COPY webserver.conf /etc/webserver/config.conf
 # Create Daemon
-COPY webserver.service /etc/systemd/system
+COPY WebServer.service /etc/systemd/system
 # Run un boot
-RUN ln -s /etc/systemd/system/webserver.service /etc/systemd/system/multi-user.target.wants/webserver.service
+RUN ln -s /etc/systemd/system/WebServer.service /etc/systemd/system/multi-user.target.wants/WebServer.service
