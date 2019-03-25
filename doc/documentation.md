@@ -1,8 +1,8 @@
 # Operating Systems Project
 
-## Pablo Rodriguez
-## Diego Jimenez
-## Geovanny
+### Pablo Rodriguez
+### Diego Jimenez
+### Geovanny
 
 
 
