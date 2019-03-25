@@ -22,5 +22,13 @@ void web(int fd, int hit)
 }
 ```
 
+# TimeTable for Pablo Rodriguez
+[Utilizen esto para crear las tablas](https://www.tablesgenerator.com/markdown_tables)
+
+| Tarea      	| Dia      	| Cantidad de horas 	|
+|------------	|----------	|-------------------	|
+| Documentar 	| 0.000011 	| 0.000005          	|
+| Programar  	| 0.000024 	| 0.000047          	|
+| Etc...     	| 0.000117 	| 0.000093          	|
 
 # References
