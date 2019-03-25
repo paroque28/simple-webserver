@@ -1,0 +1,17 @@
+version: '3'
+services:
+  fifo-webserver:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        TYPE: FIFO
+    privileged: true
+    ports:
+    - "80:80"
+    volumes:
+    - ./src:/app
+    - logvolumefifo:/var/log
+    - ./default:/app/default
+volumes:
+  logvolumefifo: {}

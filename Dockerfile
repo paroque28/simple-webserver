@@ -1,5 +1,5 @@
 FROM centos/systemd
-
+ARG TYPE=FIFO
 # Initial install tools and change password
 RUN yum clean all
 RUN rpm --rebuilddb
@@ -14,11 +14,11 @@ RUN echo "root" | passwd --stdin root
 COPY src/ /app/src
 COPY Makefile /app
 
-RUN make -C /app
+RUN make -C /app TYPE=FIFO
 RUN mv /app/webserver /usr/bin
 # Create Initial configuration
 RUN mkdir -p /etc/webserver
-COPY webserver.conf /etc/webserver/config.conf
+COPY webserver-default.conf /etc/webserver/config.conf
 # Create Daemon
 COPY WebServer.service /etc/systemd/system
 # Run un boot
