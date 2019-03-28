@@ -48,6 +48,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SORRY 43
 #define LOG   44
 
+
+#define DO_EXPAND(VAL)  VAL ## 1
+#define EXPAND(VAL)     DO_EXPAND(VAL)
+
+#if !defined(FORK) && !defined(FIFO)
+#error You must define FORK or FIFO before compiling webserver use -D flag on gcc or TYPE= on make
+#endif
+
 struct {
 	char *ext;
 	char *filetype;

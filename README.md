@@ -36,7 +36,7 @@ sudo apt-get install docker-compose
 ## Usage
 To run all webservers:
 ```bash
-    docker-compose up
+    docker-compose up -d
 ```
 To stop all webservers:
 ```bash

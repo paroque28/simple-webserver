@@ -11,10 +11,11 @@ services:
     - "80:8001"
     volumes:
     - ./default:/app/default
+    - ./webserver-fifo.conf:/etc/webserver/config.conf
     command: /bin/bash
     tty: true
     stdin_open: true
-    fork-webserver:
+  fork-webserver:
     build:
       context: ./
       dockerfile: Dockerfile
@@ -22,9 +23,10 @@ services:
         TYPE: FORK
     privileged: true
     ports:
-    - "81:8001"
+    - "81:8002"
     volumes:
     - ./default:/app/default
+    - ./webserver-fork.conf:/etc/webserver/config.conf
     command: /bin/bash
     tty: true
     stdin_open: true
