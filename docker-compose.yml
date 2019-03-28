@@ -8,10 +8,25 @@ services:
         TYPE: FIFO
     privileged: true
     ports:
-    - "80:80"
+    - "80:8001"
     volumes:
-    - ./src:/app
-    - logvolumefifo:/var/log
     - ./default:/app/default
+    command: /bin/bash
+    tty: true
+    stdin_open: true
+    fork-webserver:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        TYPE: FORK
+    privileged: true
+    ports:
+    - "81:8001"
+    volumes:
+    - ./default:/app/default
+    command: /bin/bash
+    tty: true
+    stdin_open: true
 volumes:
   logvolumefifo: {}
