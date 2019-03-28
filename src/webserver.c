@@ -59,7 +59,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct {
 	char *ext;
 	char *filetype;
-} extensions [] = {
+} extensions [] = { //Definition of the supported extensions
 	{"gif", "image/gif" },  
 	{"jpg", "image/jpeg"}, 
 	{"jpeg","image/jpeg"},
@@ -69,19 +69,20 @@ struct {
 	{"tar", "image/tar" },  
 	{"htm", "text/html" },  
 	{"html","text/html" },  
-	{"php", "text/php" },  
+	{"php", "text/php"  },  
 	{"cgi", "text/cgi"  },  
 	{"asp","text/asp"   },  
 	{"jsp", "image/jsp" },  
 	{"xml", "text/xml"  },  
 	{"js","text/js"     },
     {"css","test/css"   }, 
-	{"ico","image/ico"   },
-	{"iso","image/iso"   },
+	{"ico","image/ico"  },
+	{"iso","image/iso"  },
+	{"txt","text/txt"   },
 	{0,0} };
 
 
-
+//definition of paths
 char * ROOT_FOLDER= "ROOT_DIR=";
 char * PORT = "PORT=";
 char * LOG_FILE = "LOGFILE=";
@@ -91,6 +92,8 @@ char * directory = NULL;
 char * log_file_path = NULL;
 char * port_str = NULL;
 int socketfd;
+
+//This function is used to chop/cut strings
 void slice_str(const char * str, char * buffer, size_t start, size_t end)
 {
     size_t j = 0;
@@ -100,7 +103,7 @@ void slice_str(const char * str, char * buffer, size_t start, size_t end)
     }
     buffer[j] = 0;
 }
-
+//Funtion to register events in the log
 void log_event(int type, char *s1, char *s2, int num)
 {
 	int fd ;
@@ -136,7 +139,7 @@ void log_event(int type, char *s1, char *s2, int num)
 	
 	
 }
-
+//This function is used to control browser requests
 void web(int fd, int hit)
 {
 	int j, file_fd, buflen, len;
@@ -210,6 +213,7 @@ void intHandler(int a) {
 	(void)close(socketfd);
     exit(1);	
 }
+//Function to read the configuration file
 int check_phrase(const char * line, const char * phrase, int len_line, char * result){
 	if (!strncmp(line,phrase,strlen(phrase)-1 )){
 			slice_str(line, result,strlen(phrase),len_line-1);
@@ -218,6 +222,7 @@ int check_phrase(const char * line, const char * phrase, int len_line, char * re
 		} 
 	return 0;
 }
+
 int main(int argc, char **argv)
 {
 	int i, port, pid, listenfd, hit;
@@ -269,6 +274,7 @@ int main(int argc, char **argv)
 		log_file_path = "/var/log/webserver.log";
 	}
 
+	//Calls to log messages
 	log_event(LOG, "Directory", directory ,0);
 	log_event(LOG, "Port", port_str ,0);
 	log_event(LOG, "LOG Folder", log_file_path ,0);
@@ -288,10 +294,11 @@ int main(int argc, char **argv)
 	}
 
 
-	// (void)signal(SIGCLD, SIG_IGN); 
-	// (void)signal(SIGHUP, SIG_IGN); 
+	signal(SIGCLD, SIG_IGN); 
+	signal(SIGHUP, SIG_IGN); 
 	signal(SIGINT, intHandler); 
 	signal(SIGKILL, intHandler);
+	signal(SIGPIPE, SIG_IGN);
 	for(i=0;i<32;i++)
 		(void)close(i);	
 	(void)setpgrp();	

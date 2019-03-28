@@ -1,0 +1,5 @@
+~fixed not using txt
+fixed logfiles problem
+created start/stop scripts
+server doesn't crash after cancelling downloads
+~there is now no "socket already in use" problem
