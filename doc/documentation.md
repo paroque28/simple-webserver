@@ -184,6 +184,16 @@ For all the benchmarks we use this link to convert [CSV to Markdown](https://don
 | Total hours:                                                  |  19-3-19/26-3-19 |  16    | 
 
 
+### TimeTable for Diego Solís Jiménez
+
+
+| Activity                                                      |  Date            |  Hours | 
+|---------------------------------------------------------------|------------------|--------| 
+| Review and Analise the specification document                 |  22-3-19         |  2     | 
+| Leftover bugs from ShortAssigment1 fix                        |  23-3-19         |  4     | 
+| Leftover bugs from ShortAssigment1 fix                        |  26-3-19         |  4     |
+| First phase document elaboration                              |  26-3-19         |  2     | 
+| Total hours:                                                  |  22-3-19/26-3-19 |  12    | 
 
 
 # References
