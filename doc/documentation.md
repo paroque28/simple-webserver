@@ -139,15 +139,10 @@ For all the benchmarks we use this link to convert [CSV to Markdown](https://don
 | Time transfering the file |  300s            | 
 
 
-figure img {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-}
 
  <figure>
     <img src='benchmark1.png' alt='missing' />
-    <figcaption>Caption goes here</figcaption>
+    <figcaption>Benchmark advance example 1</figcaption>
 </figure>
 
 
@@ -155,7 +150,7 @@ figure img {
 
  <figure>
     <img src='benchmark2.png' alt='missing' />
-    <figcaption>Caption goes here</figcaption>
+    <figcaption>Benchmark advance example 2</figcaption>
 </figure>
 
 
