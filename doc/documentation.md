@@ -138,20 +138,29 @@ For all the benchmarks we use this link to convert [CSV to Markdown](https://don
 | Average response time     |  3ms             | 
 | Time transfering the file |  300s            | 
 
-![First bechmark release example 1](benchmark1.png)
-![First bechmark release example 2](benchmark2.png)
-
-
 
 <p align="center">
  <br><br>
   <img src="https://github.com/paroque28/simple-webserver/blob/master/doc/benchmark1.png">
+	
 </p>
 
 <p align="center">
- <br><br>
-  <img src="https://github.com/paroque28/simple-webserver/blob/master/doc/benchmark2.png">
+ <figure>
+    <img src='benchmark1.png' alt='missing' />
+    <figcaption>Caption goes here</figcaption>
+</figure>
 </p>
+
+
+<p align="center">
+ <figure>
+    <img src='https://github.com/paroque28/simple-webserver/blob/master/doc/benchmark1.png' alt='missing' />
+    <figcaption>Caption goes here</figcaption>
+</figure>
+</p>
+
+
 
 
 # Students Activity Logs
