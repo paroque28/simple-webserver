@@ -138,6 +138,9 @@ For all the benchmarks we use this link to convert [CSV to Markdown](https://don
 | Average response time     |  3ms             | 
 | Time transfering the file |  300s            | 
 
+![First bechmark release example 1](benchmark1.jpg)
+![First bechmark release example 2](benchmark2.jpg)
+
 
 # Students Activity Logs
 ### TimeTable for Pablo Rodriguez
@@ -160,8 +163,9 @@ For all the benchmarks we use this link to convert [CSV to Markdown](https://don
 | Benchmark and CSV research                                    |  23-3-19         |  1.5   | 
 | Create and exampSle of benchmarks: Sequential-Forked-Threaded |  24-3-19         |  2     | 
 | Create more examples of benchmarks: Pre-fork and Pre-threaded |  25-3-19         |  1     | 
-| First phase document elaboration                              |  26-3-19         |  1.5   | 
-| Total hours:                                                  |  19-3-19/26-3-19 |  8   | 
+| First phase document elaboration                              |  26-3-19         |  1.5   |
+| Build the first benchmark code release                        |  26-3-19/28-3-19 |  8     | 
+| Total hours:                                                  |  19-3-19/26-3-19 |  16    | 
 
 
 
