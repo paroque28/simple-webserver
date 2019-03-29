@@ -10,5 +10,4 @@ corresponding server. Each thread is going to repeat this request <N-cycles> tim
 Run execution command example
 
 ./bclient localhost 8080 test.jpg 1 1 
-./bclient localhost 8080 test.iso 1 1 # be careful because the file is heavy
-
+./bclient localhost 8080 test.iso 1 1 
