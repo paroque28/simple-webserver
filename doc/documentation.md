@@ -2,7 +2,7 @@
 
 #### Pablo Rodriguez
 #### Diego Jimenez
-#### Geovanny Espinoza Quiros-2014046508
+#### Geovanny Espinoza Quiros-201404508
 
 
 # Introduction 
@@ -140,9 +140,10 @@ For all the benchmarks we use this link to convert [CSV to Markdown](https://don
 
 
 
+
  <figure>
     <img src='benchmark1.png' alt='missing' />
-    <figcaption>Benchmark advance example 1</figcaption>
+    <figcaption>BenchMark Example 1</figcaption>
 </figure>
 
 
@@ -150,7 +151,7 @@ For all the benchmarks we use this link to convert [CSV to Markdown](https://don
 
  <figure>
     <img src='benchmark2.png' alt='missing' />
-    <figcaption>Benchmark advance example 2</figcaption>
+    <figcaption>BenchMark Example 2</figcaption>
 </figure>
 
 
@@ -182,15 +183,6 @@ For all the benchmarks we use this link to convert [CSV to Markdown](https://don
 | Build the first benchmark code release                        |  26-3-19/28-3-19 |  8     | 
 | Total hours:                                                  |  19-3-19/26-3-19 |  16    | 
 
-### TimeTable for Diego Solís Jiménez
-
-
-| Activity                                                      |  Date            |  Hours | 
-|---------------------------------------------------------------|------------------|--------| 
-| Past Bugs fixing                                              |  23-3-19         |  4     | 
-| Past Bugs fixing                                              |  26-3-19         |  4     | 
-| First phase document elaboration                              |  26-3-19         |  3     | 
-| Total hours:                                                  |  19-3-19/26-3-19 |  11    | 
 
 
 
