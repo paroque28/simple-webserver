@@ -139,26 +139,25 @@ For all the benchmarks we use this link to convert [CSV to Markdown](https://don
 | Time transfering the file |  300s            | 
 
 
-<p align="center">
- <br><br>
-  <img src="https://github.com/paroque28/simple-webserver/blob/master/doc/benchmark1.png">
-	
-</p>
+figure img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
 
-<p align="center">
  <figure>
     <img src='benchmark1.png' alt='missing' />
     <figcaption>Caption goes here</figcaption>
 </figure>
-</p>
 
 
-<p align="center">
+
+
  <figure>
-    <img src='https://github.com/paroque28/simple-webserver/blob/master/doc/benchmark1.png' alt='missing' />
+    <img src='benchmark2.png' alt='missing' />
     <figcaption>Caption goes here</figcaption>
 </figure>
-</p>
+
 
 
 
