@@ -12,7 +12,7 @@ services:
     volumes:
     - ./default:/app/default
     - ./webserver-fifo.conf:/etc/webserver/config.conf
-    command: /bin/bash
+    - /sys/fs/cgroup:/sys/fs/cgroup:ro
     tty: true
     stdin_open: true
   fork-webserver:
@@ -27,7 +27,7 @@ services:
     volumes:
     - ./default:/app/default
     - ./webserver-fork.conf:/etc/webserver/config.conf
-    command: /bin/bash
+    - /sys/fs/cgroup:/sys/fs/cgroup:ro
     tty: true
     stdin_open: true
 volumes:
