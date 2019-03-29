@@ -138,8 +138,8 @@ For all the benchmarks we use this link to convert [CSV to Markdown](https://don
 | Average response time     |  3ms             | 
 | Time transfering the file |  300s            | 
 
-![First bechmark release example 1](benchmark1.jpg)
-![First bechmark release example 2](benchmark2.jpg)
+![First bechmark release example 1](benchmark1.png)
+![First bechmark release example 2](benchmark2.png)
 
 
 # Students Activity Logs
