@@ -1,23 +1,29 @@
 # Operating Systems Project
 
 #### Pablo Rodriguez
-#### Diego Jimenez
+#### Diego Jimenez-2014027244
 #### Geovanny Espinoza Quiros-201404508
 
 
 # Introduction 
 
-Lorem Ipsum
-```c
-void web(int fd, int hit)
-{
-	int j, file_fd, buflen, len;
-	long i, ret;
-	char * fstr;
-	static char buffer[BUFSIZE+1];
-}
-```
+
+###How do threads work?
+
+###How are threads implemented
+
+###Overview of scheduling Mechanisms to be implemented
+
+###About Docker containers
+
+###About POSIX pthreads library
+
+###Project brief especification (what does it do and how does it)
+
+
+
 # BenchMarks
+
 For all the benchmarks we use this link to convert [CSV to Markdown](https://donatstudios.com/CsvToMarkdownTable)
 
 ## WebServer Sequential version Example.
@@ -154,13 +160,18 @@ For all the benchmarks we use this link to convert [CSV to Markdown](https://don
     <figcaption>BenchMark Example 2</figcaption>
 </figure>
 
+#Development Enviroment
 
+#Program Design
 
+#Instructions on how to use the program
 
+To run the diferent servers execute: start_ebserver.sh
+To stop the servers execute: stop_webserver.sh
 
 # Students Activity Logs
 ### TimeTable for Pablo Rodriguez
-[Utilizen esto para crear las tablas](https://www.tablesgenerator.com/markdown_tables)
+
 
 | Tarea      	| Dia      	| Cantidad de horas 	|
 |------------	|----------	|-------------------	|
@@ -195,6 +206,13 @@ For all the benchmarks we use this link to convert [CSV to Markdown](https://don
 | First phase document elaboration                              |  26-3-19         |  2     | 
 | Total hours:                                                  |  22-3-19/26-3-19 |  12    | 
 
+
+
+#Project Final Status
+
+#Conclusions
+
+#Recomendations and Suggestions
 
 # References
 
