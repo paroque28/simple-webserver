@@ -1,5 +1,5 @@
 #Don't upload log files
 *.log
 webserver
-default/test.iso
+*.iso
 .vscode
