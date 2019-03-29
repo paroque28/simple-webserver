@@ -1,23 +1,29 @@
 # Operating Systems Project
 
 #### Pablo Rodriguez
-#### Diego Jimenez
+#### Diego Jimenez-2014027244
 #### Geovanny Espinoza Quiros-201404508
 
 
 # Introduction 
 
-Lorem Ipsum
-```c
-void web(int fd, int hit)
-{
-	int j, file_fd, buflen, len;
-	long i, ret;
-	char * fstr;
-	static char buffer[BUFSIZE+1];
-}
-```
+
+###How do threads work?
+
+###How are threads implemented
+
+###Overview of scheduling Mechanisms to be implemented
+
+###About Docker containers
+
+###About POSIX pthreads library
+
+###Project brief especification (what does it do and how does it)
+
+
+
 # BenchMarks
+
 For all the benchmarks we use this link to convert [CSV to Markdown](https://donatstudios.com/CsvToMarkdownTable)
 
 ## WebServer Sequential version Example.
@@ -139,9 +145,33 @@ For all the benchmarks we use this link to convert [CSV to Markdown](https://don
 | Time transfering the file |  300s            | 
 
 
+
+
+ <figure>
+    <img src='benchmark1.png' alt='missing' />
+    <figcaption>BenchMark Example 1</figcaption>
+</figure>
+
+
+
+
+ <figure>
+    <img src='benchmark2.png' alt='missing' />
+    <figcaption>BenchMark Example 2</figcaption>
+</figure>
+
+#Development Enviroment
+
+#Program Design
+
+#Instructions on how to use the program
+
+To run the diferent servers execute: start_ebserver.sh
+To stop the servers execute: stop_webserver.sh
+
 # Students Activity Logs
 ### TimeTable for Pablo Rodriguez
-[Utilizen esto para crear las tablas](https://www.tablesgenerator.com/markdown_tables)
+
 
 | Tarea      	| Dia      	| Cantidad de horas 	|
 |------------	|----------	|-------------------	|
@@ -160,11 +190,29 @@ For all the benchmarks we use this link to convert [CSV to Markdown](https://don
 | Benchmark and CSV research                                    |  23-3-19         |  1.5   | 
 | Create and exampSle of benchmarks: Sequential-Forked-Threaded |  24-3-19         |  2     | 
 | Create more examples of benchmarks: Pre-fork and Pre-threaded |  25-3-19         |  1     | 
-| First phase document elaboration                              |  26-3-19         |  1.5   | 
-| Total hours:                                                  |  19-3-19/26-3-19 |  8   | 
+| First phase document elaboration                              |  26-3-19         |  1.5   |
+| Build the first benchmark code release                        |  26-3-19/28-3-19 |  8     | 
+| Total hours:                                                  |  19-3-19/26-3-19 |  16    | 
+
+
+### TimeTable for Diego Solís Jiménez
+
+
+| Activity                                                      |  Date            |  Hours | 
+|---------------------------------------------------------------|------------------|--------| 
+| Review and Analise the specification document                 |  22-3-19         |  2     | 
+| Leftover bugs from ShortAssigment1 fix                        |  23-3-19         |  4     | 
+| Leftover bugs from ShortAssigment1 fix                        |  26-3-19         |  4     |
+| First phase document elaboration                              |  26-3-19         |  2     | 
+| Total hours:                                                  |  22-3-19/26-3-19 |  12    | 
 
 
 
+#Project Final Status
+
+#Conclusions
+
+#Recomendations and Suggestions
 
 # References
 
