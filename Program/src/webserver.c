@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <pthread.h>
 #include <regex.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -47,13 +48,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ERROR 42
 #define SORRY 43
 #define LOG   44
+#define MAX_THREADS
 
 
-#define DO_EXPAND(VAL)  VAL ## 1
-#define EXPAND(VAL)     DO_EXPAND(VAL)
-
-#if !defined(FORK) && !defined(FIFO)
-#error You must define FORK or FIFO before compiling webserver use -D flag on gcc or TYPE= on make
+#if !defined(FORK) && !defined(FIFO) && !defined(THREAD)
+#error You must define FORK or FIFO or THREAD before compiling webserver use -D flag on gcc or TYPE= on make
 #endif
 
 struct {
@@ -80,7 +79,7 @@ struct {
 	{"iso","image/iso"  },
 	{"txt","text/txt"   },
 	{0,0} };
-
+#define THREADED
 
 //definition of paths
 char * ROOT_FOLDER= "ROOT_DIR=";
@@ -92,6 +91,19 @@ char * directory = NULL;
 char * log_file_path = NULL;
 char * port_str = NULL;
 int socketfd;
+
+#if defined(THREADED) || defined(PRETHREADED)
+pthread_t threads[MAX_THREADS];
+char threads_status[MAX_THREADS] = { 0 };
+
+size_t findIndex( const char a[], size_t size, int value )
+{
+    size_t index = 0;
+    while ( index < size && a[index] != value ) ++index;
+    return ( index == size ? -1 : index );
+}
+
+#endif
 
 //This function is used to chop/cut strings
 void slice_str(const char * str, char * buffer, size_t start, size_t end)
@@ -139,9 +151,23 @@ void log_event(int type, char *s1, char *s2, int num)
 	
 	
 }
+
+struct web_args {
+    int fd;
+    int hit;
+	int thread_id;
+};
+
 //This function is used to control browser requests
-void web(int fd, int hit)
+void web(void* input)
 {
+	int fd = ((struct web_args*)input)->fd;
+	int hit = ((struct web_args*)input)->hit;
+	int thread_id = (struct web_args*)input)->thread_id;
+	if(thread_id != -1){
+		log_event(LOG, "Thread created", "" ,thread_id);
+	}
+	free(input);
 	int j, file_fd, buflen, len;
 	long i, ret;
 	char * fstr;
@@ -205,6 +231,10 @@ void web(int fd, int hit)
 #ifdef FORK
 	exit(1);
 #endif
+	log_event(LOG, "Exiting thread", "" ,thread_id);
+	if(thread_id != -1){
+		threads_status[thread_id] = 0;
+	}
 }
 
 void intHandler(int a) {
@@ -332,6 +362,10 @@ int main(int argc, char **argv)
     		log_event(ERROR, "Setsocketopts", "Error code" , status);
 		if (status = setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
     		log_event(ERROR, "Setsocketopts", "Error code" , status);
+		struct web_args*  request_args = (struct web_args *)malloc(sizeof(struct web_args));
+		request_args->fd = socketfd;
+		request_args->hit = hit;
+		request_args->thread_id = -1;
 // Multiple forks
 #ifdef FORK
 		if((pid = fork()) < 0) {
@@ -340,7 +374,7 @@ int main(int argc, char **argv)
 		else {
 			if(pid == 0) {
 				(void)close(listenfd);
-				web(socketfd,hit);
+				web(request_args);
 				(void)close(socketfd);
 				exit(0);
 			} else {
@@ -349,9 +383,21 @@ int main(int argc, char **argv)
 		}
 #endif
 
+#ifdef THREADED
+	request_args->thread_id = findIndex(threads_status, MAX_THREADS, 0);
+	if (request_args->thread_id == -1){
+		log_event(ERROR, "MAX threads ", "" ,0);
+		(void)close(socketfd);
+	}
+	pthread_create(&threads[request_args->thread_id], NULL, web, (void *)request_args);
+	threads_status[request_args->thread_id] = 1;
+	web(request_args);
+	(void)close(socketfd);
+#endif
+
 //Serial Mode
 #ifdef FIFO
-		web(socketfd,hit);
+		web(request_args);
 		(void)close(socketfd);
 #endif
 	}
