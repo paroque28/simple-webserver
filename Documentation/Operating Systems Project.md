@@ -136,50 +136,6 @@ The code that is attached in the source package include the first release of the
 A problem that had to be solved was to be careful with the thread ID because since the thread is created must retain the same id for the ncycles and depending on how the thread is created, this id change at the moment that the function ncycles is called. Each thread has a struct that store some important feasures, for example, the domain and path that need to be consulted on the server, this data is really helpful to analyze the behavior of the threads for when they overlap and in this way we have knowledge at any time about their status. 
 For this version, the results are displayed in the terminal, but they are not yet in CSV format.
 
-**WebServer Sequential version Example**
-##### Run the following line on linux terminal
-###### ./ bclient 192.168.100.2 8002 movie.iso 3 10
-##### The following data shows an example of the response after execute the line mention above.
-
-
-|          Params           |       Result     |
-|---------------------------|------------------|
-| WebServerName             | 192.168.100.2    |
-| WebServerNameRequest      |  192.168.100.201 |
-| RequestId                 | 01               |
-| WebServerMechanism        | Sequential       |
-| Initial request time      | 10ms             |
-| The kind of file          | iso              |
-|  The file size            |  500Mb           |
-| The response time         |  300ms           |
-| Amount of requests        |  30              |
-| Average response time     |  50ms            |
-| Time transfering the file |  48s             |
-
-#
-#
-#
-## WebServer Forked version Example.
-##### Run the following line on linux terminal
-###### ./ bclient 192.168.100.10 8010 file.zip 3 10
-##### The following data shows an example of the response after execute the line mention above.
-##### The response time is going to depends of the heavyweight
-#
-#
-|          Params          |       Result           |
-|---------------------------|------------------|
-| WebServerName             |  192.168.100.2   |
-| WebServerNameRequest      |  192.168.100.202 |
-| RequestId                 |  02              |
-| WebServerMechanism        |  Forked          |
-| Initial request time      |  20ms            |
-| The kind of file          |  zip             |
-|  The file size            |  300Mb           |
-| The response time         |  30ms            |
-| Amount of requests        |  20              |
-| Average response time     |  60ms            |
-| Time transfering the file |  28s             |
-
 
 
 <figure>
@@ -193,6 +149,11 @@ For this version, the results are displayed in the terminal, but they are not ye
 <figure>
    <img src='https://github.com/paroque28/simple-webserver/blob/master/Documentation/benchmark2.png?raw=true' alt='missing' />
    <figcaption>Fig 2. BenchMark Example 2</figcaption>
+</figure>
+
+<figure>
+   <img src='https://github.com/paroque28/simple-webserver/blob/master/Documentation/benchmark3.png?raw=true' alt='missing' />
+   <figcaption>Fig 3. BenchMark Example of final release</figcaption>
 </figure>
 
 
@@ -237,7 +198,11 @@ stop_webserver.sh
 | Create more examples of benchmarks: Pre-fork and Pre-threaded |  25-3-19         |  1     |
 | First phase document elaboration                              |  26-3-19         |  1.5   |
 | Build the first benchmark code release                        |  26-3-19 / 27-3-19 |  8     |
-| **Total hours:**                                                  |  -------- |  16    |
+| Build the second and final benchmark code release                        |  29-3-19 / 2-4-19 |  8     |
+| Research how to build threads without POSIX pthread library   |  2-4-19 / 3-4-19 |  5     |
+| Understand how a found library works to implement one   |  4-4-19 / 5-4-19 |  2     |
+| Second phase document elaboration     | 5-4-19 |  1     |
+| **Total hours:**                                                  |  -------- |  32    |
 
 
 ### TimeTable for Diego Solís Jiménez
@@ -256,16 +221,19 @@ stop_webserver.sh
 # Project Current Status
 - [x] FIFO version of webserver
 - [x] FORK version of webserver
-- [ ] Threaded version of webserver
+- [x] Threaded version of webserver
 - [ ] Pre-Thread version of webserver
 - [ ] Pre-Fork version of webserver
-- [ ] My-Pthread Library
+- [x] My-Pthread Library
 - [x] Docker containers of webservers
 - [x] Benchmark tool
 
 # Conclusions
+ 
 
-
+- The implementation of scheduling is a delicate matter.
+- Designing a thread library requires an extensive understanding of how the OS works.
+- Multithreading causes a significative performance improvement compared.
 
 
 # Recomendations and Suggestions
@@ -293,13 +261,3 @@ stop_webserver.sh
 **[9]** Audsley, N., & Burns, A. (2019). REAL-TIME SYSTEM SCHEDULING. Retrieved from http://beru.univ-brest.fr/~singhoff/cheddar/publications/audsley95.pdf
 
 **[10]** Milevyo, (2015). Http protocol in C. Retrieved from https://stackoverflow.com/questions/33960385/how-to-download-a-file-from-http-using-c
-
-
-
-
-
-
-
-
-
-
