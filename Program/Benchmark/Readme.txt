@@ -6,8 +6,13 @@
 of any size)
 • The client program is going to create <N-threads> that are going to send requests to the
 corresponding server. Each thread is going to repeat this request <N-cycles> times.
-There are some warnings that need to be solved
+
+
+Command to Compile 
+gcc bclient.c  -lpthread -o bclient
+
 Run execution command example
 
-./bclient localhost 8080 test.jpg 1 1 
+./bclient ocalhost 8080 test.jpg 1 1 
 ./bclient localhost 8080 test.iso 1 1 
+

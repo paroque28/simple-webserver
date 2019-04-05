@@ -1,11 +1,11 @@
 #include <stdio.h> //Used to write the beanchmark
 #include <stdlib.h> //System functions
 #include <string.h> //Used for parse args inserted by the user
-#include <pthread.h> //Used for creating threads.
+//#include <pthread.h> //Used for creating threads.
 #include <unistd.h>  //Header file for sleep(). man 3 sleep for details. 
 #include <time.h> //Used to measure the response and total time.
 #include <netdb.h> //Used to communicate with the server.
-
+#include "my_pthread_t.h"
 
 /*Constants*/
 #define benchmarkName "BenchMark.csv"
@@ -199,7 +199,9 @@ int main(int argc, char *argv[]){
 		fprintf(fb,"Cycles, %d, \n", cycles); // 
 		fprintf(fb,"URL, %s/%s,\n", machine,file);
 		fclose (fb);
-		pthread_t thread_id[threads]; 
+		
+		//pthread_t thread_id[threads];  //PTHREAD 1/4
+		my_pthread_t thread_id[threads];//MYPTHREAD 1/4
 		struct thread_arg arg[threads];
 		
 		 t = clock(); 
@@ -210,7 +212,9 @@ int main(int argc, char *argv[]){
 
 			strcpy(arg[i].domain, machine);
 			strcpy(arg[i].path,file);
-			pthread_create(&thread_id[i], NULL, &downloadFile, &arg[i]); 
+			//pthread_create(&thread_id[i], NULL, &downloadFile, &arg[i]);//PTHREAD 2/4
+		    my_pthread_create(&thread_id[i], NULL, &downloadFile, &arg[i]); //MYPTHREAD 2/4
+
 
 			//arg[i].id = thread_id[i];
 			// printf("In main \nthread id = %ld\n", (long)  arg[i].id );
@@ -219,17 +223,20 @@ int main(int argc, char *argv[]){
 		} 
 		
 		for(int i=0;i<threads;i++){
-			pthread_join(thread_id[i], NULL); 	
+			//pthread_join(thread_id[i], NULL);  //PTHREAD 3/4
+			my_pthread_join(thread_id[i],NULL);	 //MYPTHREAD 3/4
 		}
-		   
+		  
 		t = clock() - t; 
 		double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
 		fb=fopen("BenchMark.csv","a");	
 		fprintf(fb, "Total execution time, %f\n", time_taken);
 		fclose(fb);
 	  
-		pthread_exit(NULL); 	
+		//pthread_exit(NULL); //PTHREAD 4/4
+		my_pthread_exit(NULL);//MYPTHREAD 4/4	
 		}
 	return 0;
 }
+
 

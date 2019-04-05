@@ -1,7 +1,8 @@
 all: app
 
-app: bclient.c 
-		$(CC) bclient.c   -o  bclient -lpthread 
+app: bclient.c  ./libmy_pthread.a
+		$(CC)  -o  bclient bclient.c ./libmy_pthread.a   -lpthread  -lm -I./
+
 		
 .PHONY: clean
 

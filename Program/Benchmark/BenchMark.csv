@@ -1,0 +1,13 @@
+Machine, localhost, 
+file, test.jpg, 
+Port, 8080, 
+Threads,  2, 
+Cycles, 2, 
+URL, localhost/test.jpg,
+Response time T1-C1,  0.000179 ,
+Bytes received T1:, 6226, 
+Response time T1-C2,  0.000126 ,
+Response time T2-C1,  0.000113 ,
+Bytes received T2:, 6226, 
+Response time T2-C2,  0.000135 ,
+Total execution time, 0.003069
