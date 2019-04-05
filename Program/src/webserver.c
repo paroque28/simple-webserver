@@ -37,7 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <pthread.h>
 #include <regex.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -48,11 +47,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ERROR 42
 #define SORRY 43
 #define LOG   44
-#define MAX_THREADS
+#define MAX_THREADS 1000
 
 
-#if !defined(FORK) && !defined(FIFO) && !defined(THREAD)
-#error You must define FORK or FIFO or THREAD before compiling webserver use -D flag on gcc or TYPE= on make
+#if !defined(FORK) && !defined(FIFO) && !defined(THREADED)
+#error You must define FORK or FIFO or THREADED before compiling webserver use -D flag on gcc or TYPE= on make
+#endif
+
+#if defined(THREADED) || defined(PRE_THREADED)
+#include <pthread.h>
 #endif
 
 struct {
@@ -79,7 +82,6 @@ struct {
 	{"iso","image/iso"  },
 	{"txt","text/txt"   },
 	{0,0} };
-#define THREADED
 
 //definition of paths
 char * ROOT_FOLDER= "ROOT_DIR=";
@@ -159,11 +161,11 @@ struct web_args {
 };
 
 //This function is used to control browser requests
-void web(void* input)
+void* web(void* input)
 {
 	int fd = ((struct web_args*)input)->fd;
 	int hit = ((struct web_args*)input)->hit;
-	int thread_id = (struct web_args*)input)->thread_id;
+	int thread_id = ((struct web_args*)input)->thread_id;
 	if(thread_id != -1){
 		log_event(LOG, "Thread created", "" ,thread_id);
 	}
@@ -173,10 +175,13 @@ void web(void* input)
 	char * fstr;
 	static char buffer[BUFSIZE+1];
 
-	ret =read(fd,buffer,BUFSIZE); 
+	ret = read(fd,buffer,BUFSIZE); 
 	if(ret == 0 || ret == -1) {
+		int errnum = errno;
+		perror("Error on read request");
 		log_event(SORRY,"failed to read browser request","",fd);
 	}
+
 	if(ret > 0 && ret < BUFSIZE)	
 		buffer[ret]=0;	
 	else buffer[0]=0;
@@ -225,6 +230,7 @@ void web(void* input)
 	while (	(ret = read(file_fd, buffer, BUFSIZE)) > 0 ) {
 		(void)write(fd,buffer,ret);
 	}
+	//(void)close(fd);
 #ifdef LINUX
 	sleep(1);
 #endif
@@ -232,9 +238,11 @@ void web(void* input)
 	exit(1);
 #endif
 	log_event(LOG, "Exiting thread", "" ,thread_id);
+#if defined(THREADED) || defined(PRE_THREADED)
 	if(thread_id != -1){
 		threads_status[thread_id] = 0;
 	}
+#endif
 }
 
 void intHandler(int a) {
@@ -307,7 +315,7 @@ int main(int argc, char **argv)
 	//Calls to log messages
 	log_event(LOG, "Directory", directory ,0);
 	log_event(LOG, "Port", port_str ,0);
-	log_event(LOG, "LOG Folder", log_file_path ,0);
+	log_event(LOG, "LOG Folder", log_file_path, 0);
 	//------------------------------------
 
 	if( !strncmp(directory,"/"   ,2 ) || !strncmp(directory,"/etc", 5 ) ||
@@ -366,6 +374,7 @@ int main(int argc, char **argv)
 		request_args->fd = socketfd;
 		request_args->hit = hit;
 		request_args->thread_id = -1;
+		signal(SIGPIPE, SIG_IGN);
 // Multiple forks
 #ifdef FORK
 		if((pid = fork()) < 0) {
@@ -375,7 +384,6 @@ int main(int argc, char **argv)
 			if(pid == 0) {
 				(void)close(listenfd);
 				web(request_args);
-				(void)close(socketfd);
 				exit(0);
 			} else {
 				(void)close(socketfd);
@@ -384,7 +392,7 @@ int main(int argc, char **argv)
 #endif
 
 #ifdef THREADED
-	request_args->thread_id = findIndex(threads_status, MAX_THREADS, 0);
+	request_args->thread_id = findIndex(threads_status, MAX_THREADS , 0);
 	if (request_args->thread_id == -1){
 		log_event(ERROR, "MAX threads ", "" ,0);
 		(void)close(socketfd);
@@ -392,13 +400,11 @@ int main(int argc, char **argv)
 	pthread_create(&threads[request_args->thread_id], NULL, web, (void *)request_args);
 	threads_status[request_args->thread_id] = 1;
 	web(request_args);
-	(void)close(socketfd);
 #endif
 
 //Serial Mode
 #ifdef FIFO
 		web(request_args);
-		(void)close(socketfd);
 #endif
 	}
 }
