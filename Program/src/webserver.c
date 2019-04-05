@@ -48,7 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SORRY 43
 #define LOG   44
 #define MAX_THREADS 1000
-
+#define THREADED
 
 #if !defined(FORK) && !defined(FIFO) && !defined(THREADED)
 #error You must define FORK or FIFO or THREADED before compiling webserver use -D flag on gcc or TYPE= on make
@@ -173,11 +173,13 @@ void* web(void* input)
 	int j, file_fd, buflen, len;
 	long i, ret;
 	char * fstr;
-	static char buffer[BUFSIZE+1];
+	#if !defined(THREADED) || !defined(PRETHREADED)
+	static 
+	#endif
+	char buffer[BUFSIZE+1];
 
 	ret = read(fd,buffer,BUFSIZE); 
 	if(ret == 0 || ret == -1) {
-		int errnum = errno;
 		perror("Error on read request");
 		log_event(SORRY,"failed to read browser request","",fd);
 	}
@@ -230,15 +232,13 @@ void* web(void* input)
 	while (	(ret = read(file_fd, buffer, BUFSIZE)) > 0 ) {
 		(void)write(fd,buffer,ret);
 	}
-	//(void)close(fd);
-#ifdef LINUX
-	sleep(1);
-#endif
+	(void)close(fd);
 #ifdef FORK
 	exit(1);
 #endif
-	log_event(LOG, "Exiting thread", "" ,thread_id);
+	
 #if defined(THREADED) || defined(PRE_THREADED)
+	log_event(LOG, "Exiting thread", "" ,thread_id);
 	if(thread_id != -1){
 		threads_status[thread_id] = 0;
 	}
@@ -399,7 +399,7 @@ int main(int argc, char **argv)
 	}
 	pthread_create(&threads[request_args->thread_id], NULL, web, (void *)request_args);
 	threads_status[request_args->thread_id] = 1;
-	web(request_args);
+	//pthread_join(&threads[request_args->thread_id], NULL);
 #endif
 
 //Serial Mode
