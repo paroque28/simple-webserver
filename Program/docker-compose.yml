@@ -8,7 +8,7 @@ services:
         TYPE: FIFO
     privileged: true
     ports:
-    - "80:8001"
+    - "81:8001"
     volumes:
     - ./default:/app/default
     - ./webserver-fifo.conf:/etc/webserver/config.conf
@@ -23,7 +23,7 @@ services:
         TYPE: FORK
     privileged: true
     ports:
-    - "81:8002"
+    - "82:8002"
     volumes:
     - ./default:/app/default
     - ./webserver-fork.conf:/etc/webserver/config.conf
@@ -38,7 +38,7 @@ services:
         TYPE: THREADED
     privileged: true
     ports:
-    - "81:8003"
+    - "83:8003"
     volumes:
     - ./default:/app/default
     - ./webserver-threaded.conf:/etc/webserver/config.conf
