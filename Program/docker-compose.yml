@@ -30,5 +30,18 @@ services:
     - /sys/fs/cgroup:/sys/fs/cgroup:ro
     tty: true
     stdin_open: true
-volumes:
-  logvolumefifo: {}
+  threaded-webserver:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        TYPE: THREADED
+    privileged: true
+    ports:
+    - "81:8003"
+    volumes:
+    - ./default:/app/default
+    - ./webserver-threaded.conf:/etc/webserver/config.conf
+    - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    tty: true
+    stdin_open: true

@@ -14,7 +14,7 @@ RUN echo "root" | passwd --stdin root
 COPY src/ /app/src
 COPY Makefile /app
 
-RUN make -C /app TYPE=FIFO
+RUN make -C /app TYPE=$(TYPE)
 RUN mv /app/webserver /usr/bin
 # Create Initial configuration
 RUN mkdir -p /etc/webserver
