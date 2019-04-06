@@ -1,15 +1,5 @@
 #include "my_pthread.h"
 
-#define STACK_S 8192
-#define READY 0
-#define YIELD 1
-#define WAIT 2
-#define EXIT 3
-#define JOIN 4
-#define MUTEX_WAIT 5
-#define MAX_SIZE 15
-#define INTERVAL 200
-
 tcb *currentThread, *prevThread;
 list *runningQueue[MAX_SIZE];
 list *allThreads[MAX_SIZE];
@@ -69,14 +59,14 @@ void scheduler(int signum)
 
   
   timeElapsed += timeSpent;
-  //printf("total time spend so far before maintenance cycle %i and the amount of time spent just now %i\n", timeElapsed, timeSpent);
+  //printf("total time spend so far before boost_thread_priorities cycle %i and the amount of time spent just now %i\n", timeElapsed, timeSpent);
   //printf("[Thread %ld] Total time: %d from time remaining: %d out of %d\n", currentThread->tid, timeElapsed, (int)currentTime.it_value.tv_usec, INTERVAL * (currentThread->priority + 1));
 
-  //check for maintenance cycle
+  //check for boost_thread_priorities cycle
   if(timeElapsed >= 10000000)
   {
-    printf("\n[Thread %ld] MAINTENANCE TRIGGERED\n\n",currentThread->tid);
-    maintenance();
+    printf("\n[Thread %ld] boost_thread_priorities TRIGGERED\n\n",currentThread->tid);
+    boost_thread_priorities();
 
     //reset counter
     timeElapsed = 0;
@@ -273,7 +263,7 @@ void scheduler(int signum)
 }
 
 //thread priority boosting
-void maintenance()
+void boost_thread_priorities()
 {
   int i;
   tcb *tgt;
@@ -343,127 +333,6 @@ void garbage_collection()
   raise(SIGVTALRM);
 }
 
-//add to queue
-void enqueue(list** q, tcb* insert)
-{
-  list *queue = *q;
-
-  if(queue == NULL)
-  {
-    queue = (list*)malloc(sizeof(list));
-    queue->thread = insert;
-    queue->next = queue;
-    *q = queue;
-    return;
-  }
-
-  list *front = queue->next;
-  queue->next = (list*)malloc(sizeof(list));
-  queue->next->thread = insert;
-  queue->next->next = front;
-
-  queue = queue->next;
-  *q = queue;
-  return;
-}
-
-//remove from queue
-tcb* dequeue(list** q)
-{
-  list *queue = *q;
-  if(queue == NULL)
-  {
-    return NULL;
-  }
-  //queue is the last element in a queue at level i
-  //first get the thread control block to be returned
-  list *front = queue->next;
-  tcb *tgt = queue->next->thread;
-  //check if there is only one element left in the queue
-  //and assign null/free appropriately
-  if(queue->next == queue)
-  { 
-    queue = NULL;
-  }
-  else
-  {
-    queue->next = front->next;
-  }
-  free(front);
-
-  
-  if(tgt == NULL)
-  {printf("WE HAVE A PROBLEM IN DEQUEUE\n");}
-
-  *q = queue;
-  return tgt;
-}
-
-//insert to list
-void l_insert(list** q, tcb* jThread) //Non-circular Linked List
-{
-  list *queue = *q;
-
-  if(queue == NULL)
-  {
-    queue = (list*)malloc(sizeof(list));
-    queue->thread = jThread;
-    queue->next = NULL;
-    *q = queue;
-    return;
-  }
-
-  list *newNode = (list*)malloc(sizeof(list));
-  newNode->thread = jThread;
-
-  //append to front of LL
-  newNode->next = queue;
-  
-  queue = newNode;
-  *q = queue;
-  return;
-}
-
-//remove from list
-tcb* l_remove(list** q)
-{
-  list *queue = *q;
-
-  if(queue == NULL)
-  {
-    return NULL;
-  }
-
-  list *temp = queue;
-  tcb *ret = queue->thread;
-  queue = queue->next;
-  free(temp);
-  *q = queue;
-  return ret;
-}
-
-
-//Search table for a tcb given a uint
-tcb* thread_search(my_pthread_t tid)
-{
-  int key = tid % MAX_SIZE;
-  tcb *ret = NULL;
-
-  list *temp = allThreads[key];
-  while(allThreads[key] != NULL)
-  {
-    if(allThreads[key]->thread->tid == tid)
-    {
-      ret = allThreads[key]->thread;
-      break;
-    }
-    allThreads[key] = allThreads[key]->next;
-  }
-
-  allThreads[key] = temp;
-
-  return ret;
-}
 
 void initializeMainContext()
 {
@@ -493,7 +362,7 @@ void initializeGarbageContext()
 {
   //Set handler of timer
   signal(SIGVTALRM, scheduler);
-  initializeQueues(runningQueue); //set everything to NULL
+  initializeQueues(runningQueue,allThreads,runningQueue); //set everything to NULL
     
   //Initialize garbage collector
   getcontext(&cleanup);
@@ -559,18 +428,6 @@ int my_pthread_create(my_pthread_t * thread, pthread_attr_t * attr, void *(*func
   return 0;
 };
 
-
-void initializeQueues(list** runQ) 
-{
-  int i;
-  for(i = 0; i < MAX_SIZE; i++) 
-  {
-    runningQueue[i] = NULL;
-    allThreads[i] = NULL;
-  }
-  
-}
-
 /* wait for thread termination */
 int my_pthread_join(my_pthread_t thread, void **value_ptr)
 {
@@ -584,7 +441,7 @@ int my_pthread_join(my_pthread_t thread, void **value_ptr)
   if(thread == currentThread->tid)
   {return -1;}
 
-  tcb *tgt = thread_search(thread);
+  tcb *tgt = thread_search(thread,allThreads);
   
   if(tgt == NULL)
   {

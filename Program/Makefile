@@ -5,7 +5,7 @@ webserver: $(DEPS)
 		$(CC) src/webserver.c -o webserver -D$(TYPE) -lpthread -g -ggdb
 
 create_n_threads: src/test_pthread.c src/my_pthread.c
-		$(CC) src/test_pthread.c src/my_pthread.c -o create_n_threads -g -ggdb #-lpthread
+		$(CC) src/test_pthread.c src/my_pthread.c src/list.c -o create_n_threads -g -ggdb #-lpthread
 
 .PHONY : clean
 clean:

@@ -1,11 +1,10 @@
 #include <stdio.h> //Used to write the beanchmark
 #include <stdlib.h> //System functions
 #include <string.h> //Used for parse args inserted by the user
-//#include <pthread.h> //Used for creating threads.
+#include <pthread.h> //Used for creating threads.
 #include <unistd.h>  //Header file for sleep(). man 3 sleep for details. 
 #include <time.h> //Used to measure the response and total time.
 #include <netdb.h> //Used to communicate with the server.
-#include "my_pthread_t.h"
 
 /*Constants*/
 #define benchmarkName "BenchMark.csv"
