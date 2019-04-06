@@ -180,7 +180,11 @@ stop_webserver.sh
 | Create Fork Version of Webserver | 23-03-19|3|
 | Fix Docker Compose Error Attach | 27-03-19|2|
 | Document progress | 28-03-19| 3|
-| **Total hours:** | -------- |12 |
+| Research UserSpace Threads | 30-03-19| 2|
+| Research Use of Context get and set | 31-03-19| 2 |
+| Research Use of timers get and set | 1-03-19| 2 |
+| Code Pthreads library + simple scheduler | 2-03-19| 4|
+| **Total hours:** | -------- |22 |
 
 
 
@@ -214,9 +218,9 @@ stop_webserver.sh
 | Leftover bugs from ShortAssigment1 fix                        |  23-3-19         |  4     |
 | Leftover bugs from ShortAssigment1 fix                        |  26-3-19         |  4     |
 | First phase document elaboration                              |  26-3-19         |  2     |
-| Second phase document elaboration                             |  04-4-19         |  2     |
+| Second phase document elaboration                             |  04-4-19         |  3     |
 | my_pthread library and threaded webserver testing             |  05-3-19         |  3     |
-| **Total hours:**                                             |  -------- |  17    |
+| **Total hours:**                                             |  -------- |  18    |
 
 
 
@@ -226,7 +230,8 @@ stop_webserver.sh
 - [x] Threaded version of webserver
 - [ ] Pre-Thread version of webserver
 - [ ] Pre-Fork version of webserver
-- [x] My-Pthread Library
+- [x] My-Pthread Create Threads
+- [ ] My-Pthread Mutexes
 - [x] Docker containers of webservers
 - [x] Benchmark tool
 
