@@ -23,6 +23,7 @@
 #include <signal.h>
 #include <sys/time.h>
 #include <errno.h>
+#include <time.h>
 
 typedef unsigned long int my_pthread_t;
 #define pthread_t my_pthread_t
@@ -110,4 +111,7 @@ int my_pthread_mutex_destroy(my_pthread_mutex_t *mutex);
 void initializeMainContext();
 
 void initializeGarbageContext();
+
+void my_sleep(unsigned long time);
+
 #endif

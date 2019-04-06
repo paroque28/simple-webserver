@@ -1,13 +1,10 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 //#include <pthread.h>
 #include "my_pthread.h"
 #include <stdlib.h>
-#include <unistd.h>
 #include <signal.h>
 
 //pthread_mutex_t mutex1;
@@ -36,9 +33,10 @@ void* doSomeThing(void *arg)
 
 
     void * ptr = malloc(sizeof(int)*100); // Allocate 100 ints
+    int i = 0;
     while(run){
-        sleep(2);
-        printf("Hi\n");
+        my_sleep(2);
+        printf("Hi %d from %ld.\n", i++, *id);
     }
     free(ptr);
 
@@ -68,7 +66,7 @@ void* doSomeThing(void *arg)
     //Wait one minute
     for( int i=0; i < 5; i++) {
         printf("Sleep %d\n", i );
-        sleep(1);
+        my_sleep(1);
         
     }
 
