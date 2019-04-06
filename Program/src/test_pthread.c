@@ -36,7 +36,10 @@ void* doSomeThing(void *arg)
 
 
     void * ptr = malloc(sizeof(int)*100); // Allocate 100 ints
-    while(run); //Infinite Loop
+    while(run){
+        sleep(2);
+        printf("Hi\n");
+    }
     free(ptr);
 
     free(arg);
@@ -61,7 +64,7 @@ void* doSomeThing(void *arg)
         i++;
     }
 
-    raise(SIGVTALRM);
+    
     //Wait one minute
     for( int i=0; i < 5; i++) {
         printf("Sleep %d\n", i );

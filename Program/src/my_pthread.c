@@ -34,7 +34,7 @@ void scheduler(int signum)
   }
   //Record remaining time
   getitimer(ITIMER_VIRTUAL, &currentTime);
-
+  printf("Get Timer\n");
 
   //AT THIS POINT THE CURRENT THREAD IS NOT IN THE SCHEDULER (running queue, but it's always in allthreads)
   //once the timer finishes, the value of it_value.tv_usec will reset to the interval time (note this was when we set it_interval only)
@@ -471,6 +471,7 @@ tcb* thread_search(my_pthread_t tid)
 
 void initializeMainContext()
 {
+  printf("Initializing main context!\n");
   tcb *mainThread = (tcb*)malloc(sizeof(tcb));
   ucontext_t *mText = (ucontext_t*)malloc(sizeof(ucontext_t));
   getcontext(mText);
@@ -489,6 +490,7 @@ void initializeMainContext()
   l_insert(&allThreads[0], mainThread);
 
   currentThread = mainThread;
+  printf("Main context initialized!\n");
 }
 
 void initializeGarbageContext()
@@ -528,7 +530,7 @@ int my_pthread_create(my_pthread_t * thread, pthread_attr_t * attr, void *(*func
   task->uc_stack.ss_size = STACK_S;
   task->uc_stack.ss_flags = 0;
   makecontext(task, (void*)function, 1, arg);
-
+  //printf("Context created!\n");
   tcb *newThread = (tcb*)malloc(sizeof(tcb));
   newThread->context = task;
   newThread->tid = threadCount;
@@ -540,24 +542,24 @@ int my_pthread_create(my_pthread_t * thread, pthread_attr_t * attr, void *(*func
 
   *thread = threadCount;
   threadCount++;
-
+  //printf("Thread created: TID %ld\n", newThread->tid);
   enqueue(&runningQueue[0], newThread);
   int key = newThread->tid % MAX_SIZE;
+
   l_insert(&allThreads[key], newThread);
 
   operationInProgress = 0;
 
   //store main context
-
   if (!mainContextInitialized)
   {
+    //printf("New context: TID %ld\n", newThread->tid);
     initializeMainContext();
-
-    raise(SIGVTALRM);
+    //raise(SIGVTALRM);
   }
   printf("New thread created: TID %ld\n", newThread->tid);
   
-  
+  raise(SIGVTALRM);
   return 0;
 };
 
