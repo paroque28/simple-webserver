@@ -555,7 +555,7 @@ int my_pthread_create(my_pthread_t * thread, pthread_attr_t * attr, void *(*func
 
     raise(SIGVTALRM);
   }
-  //printf("New thread created: TID %d\n", newThread->tid);
+  printf("New thread created: TID %ld\n", newThread->tid);
   
   
   return 0;

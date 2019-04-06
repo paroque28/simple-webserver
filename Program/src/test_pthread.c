@@ -8,6 +8,7 @@
 #include "my_pthread.h"
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 
 //pthread_mutex_t mutex1;
 pthread_t tid[2000];
@@ -60,11 +61,12 @@ void* doSomeThing(void *arg)
         i++;
     }
 
-
+    raise(SIGVTALRM);
     //Wait one minute
     for( int i=0; i < 5; i++) {
         printf("Sleep %d\n", i );
         sleep(1);
+        
     }
 
 
