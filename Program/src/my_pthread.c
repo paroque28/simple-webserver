@@ -1,6 +1,6 @@
 #include "my_pthread.h"
 
-#define STACK_S 8192
+#define STACK_S 8192 //8kB stack frames
 #define READY 0
 #define YIELD 1
 #define WAIT 2
@@ -30,7 +30,7 @@ void scheduler(int signum)
 {
   if(notFinished)
   {
-    printf("caught in the handler! Get back!\n");
+    //printf("caught in the handler! Get back!\n");
     return;
   }
 
@@ -53,7 +53,7 @@ void scheduler(int signum)
   if(signum != SIGVTALRM)
   {
     /*TODO: PANIC*/
-    printf("[Thread %lu] Signal Received: %d.\nExiting...\n", currentThread->tid, signum);
+    //printf("[Thread %d] Signal Received: %d.\nExiting...\n", currentThread->tid, signum);
     exit(signum);
   }
 
@@ -575,6 +575,19 @@ int my_pthread_create(my_pthread_t * thread, pthread_attr_t * attr, void *(*func
   return 0;
 };
 
+/* give CPU pocession to other user level threads voluntarily */
+int my_pthread_yield()
+{
+  if(!mainRetrieved)
+  {
+    initializeGarbageContext();
+    initializeMainContext();
+  }
+  //L: return to signal handler/scheduler
+  currentThread->status = YIELD;
+  return raise(SIGVTALRM);
+};
+
 /* terminate a thread */
 void my_pthread_exit(void *value_ptr)
 {
@@ -587,8 +600,6 @@ void my_pthread_exit(void *value_ptr)
   currentThread->jVal = value_ptr;
   setcontext(&cleanup);
 };
-
-
 
 /* wait for thread termination */
 int my_pthread_join(my_pthread_t thread, void **value_ptr)
@@ -628,8 +639,122 @@ int my_pthread_join(my_pthread_t thread, void **value_ptr)
   return 0;
 };
 
+/* initial the mutex lock */
+int my_pthread_mutex_init(my_pthread_mutex_t *mutex, const pthread_mutexattr_t *mutexattr)
+{
+  //L: TODO: Undefined behavior if init called on locked mutex
+  notFinished = 1;
+  my_pthread_mutex_t m = *mutex;
+  
+  m.available = 1;
+  m.locked = 0;
+  m.holder = -1; //holder represents the tid of the thread that is currently holding the mutex
+  m.queue = NULL;
 
+  *mutex = m;
+  notFinished = 0;
+  return 0;
+};
 
+/* aquire the mutex lock */
+int my_pthread_mutex_lock(my_pthread_mutex_t *mutex)
+{
+  if(!mainRetrieved)
+  {
+    initializeGarbageContext();
+    initializeMainContext();
+  }
+  notFinished = 1;
+
+  //FOR NOW ASSUME MUTEX WAS INITIALIZED
+  if(!mutex->available)
+  {return -1;}
+
+  while(__atomic_test_and_set((volatile void *)&mutex->locked,__ATOMIC_RELAXED))
+  {
+    //the reason why we reset notFinished to one here is that when coming back
+    //from a swapcontext, notFinished may be zero and we can't let the operations
+    //in the loop be interrupted
+    notFinished = 1;
+    enqueue(&mutex->queue, currentThread);
+    currentThread->status = MUTEX_WAIT;
+    //we need to set notFinished to zero before going to scheduler
+    notFinished = 0;
+    raise(SIGVTALRM);
+  }
+
+  if(!mutex->available)
+  {
+    mutex->locked = 0;
+    return -1;
+  }
+
+  //Priority Inversion Case
+  currentThread->priority = 0;
+  mutex->holder = currentThread->tid;
+  
+  notFinished = 0;
+  return 0;
+};
+
+/* release the mutex lock */
+int my_pthread_mutex_unlock(my_pthread_mutex_t *mutex)
+{
+  if(!mainRetrieved)
+  {
+    initializeGarbageContext();
+    initializeMainContext();
+  }
+  //NOTE: handle errors: unlocking an open mutex, unlocking mutex not owned by calling thread, or accessing unitialized mutex
+
+  notFinished = 1;
+
+  //ASSUMING mutex->available will be initialized to 0 by default without calling init
+  //available in this case means that mutex has been initialized or destroyed (state variable)
+  if(!mutex->available || !mutex->locked || mutex->holder != currentThread->tid)
+  {return -1;}
+
+  mutex->locked = 0;
+  mutex->holder = -1;
+
+  tcb* muThread = dequeue(&mutex->queue);
+  
+  if(muThread != NULL)
+  {
+    //Priority Inversion Case
+    muThread->priority = 0;
+    enqueue(&runningQueue[0], muThread);
+  }
+
+  notFinished = 0;
+
+  return 0;
+};
+
+/* destroy the mutex */
+int my_pthread_mutex_destroy(my_pthread_mutex_t *mutex)
+{
+  notFinished = 1;
+  my_pthread_mutex_t m = *mutex;
+  //L: prevent threads from accessing while mutex is in destruction process
+  m.available = 0;
+  notFinished = 0;
+
+  //L: if mutex still locked, wait for thread to release lock
+  while(m.locked)
+  {raise(SIGVTALRM);}
+
+  //L: TODO: Undefined behavior if mutex queue isn't empty when being destroyed
+  tcb *muThread;
+  while(m.queue != NULL)
+  {
+    muThread = dequeue(&m.queue);
+    enqueue(&runningQueue[muThread->priority], muThread);
+  }
+
+  *mutex = m;
+  return 0;
+};
 
 void initializeQueues(list** runQ) 
 {
@@ -641,4 +766,3 @@ void initializeQueues(list** runQ)
   }
   
 }
-

@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-//pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
+//pthread_mutex_t mutex1;
 pthread_t tid[2000];
 int run = 1;
 
@@ -35,7 +35,7 @@ void* doSomeThing(void *arg)
 
 
     void * ptr = malloc(sizeof(int)*100); // Allocate 100 ints
-    while(run); //Infinite Loop
+    //while(run); //Infinite Loop
     free(ptr);
 
     free(arg);
