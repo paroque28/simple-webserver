@@ -35,7 +35,7 @@ void* doSomeThing(void *arg)
 
 
     void * ptr = malloc(sizeof(int)*100); // Allocate 100 ints
-    //while(run); //Infinite Loop
+    while(run); //Infinite Loop
     free(ptr);
 
     free(arg);

@@ -1,6 +1,7 @@
 #ifndef MY_PTHREAD_H
 #define MY_PTHREAD_H
 
+
 #define pthread_create(a, b, c, d) my_pthread_create(a, b, c, d)
 #define pthread_yield() my_pthread_yield()
 #define pthread_exit(a) my_pthread_exit(a)
@@ -9,8 +10,6 @@
 #define pthread_mutex_lock(a) my_pthread_mutex_lock(a)
 #define pthread_mutex_unlock(a) my_pthread_mutex_unlock(a)
 #define pthread_mutex_destroy(a) my_pthread_mutex_destroy(a)
-
-#define _GNU_SOURCE
 
 /* include lib header files that you need here: */
 #include <unistd.h>
@@ -25,8 +24,7 @@
 #include <sys/time.h>
 #include <errno.h>
 
-//L: So our pthreads are just unsigned ints? I guess that means make a thread ID?
-typedef uint my_pthread_t;
+typedef unsigned long int my_pthread_t;
 #define pthread_t my_pthread_t
 
 typedef struct sigaction mySig;
@@ -37,6 +35,7 @@ typedef struct threadControlBlock
   my_pthread_t tid;
   unsigned int priority;
 
+  // Status
   //0 = ready to run, 1 = yielding, 2 = waiting, 3 = exiting, 4 = joining, 5 = waiting for mutex lock
   int status;
   void* jVal;
@@ -63,12 +62,6 @@ typedef struct my_pthread_mutex_t
 
 } my_pthread_mutex_t;
 #define pthread_mutex_t my_pthread_mutex_t
-
-/* define your data structures here: */
-
-// Feel free to add your own auxiliary data structures
-
-/* Function Declarations: */
 
 //L: queue functions
 void enqueue(list**, tcb*);
