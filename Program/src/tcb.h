@@ -8,11 +8,12 @@ typedef struct list list;
 typedef unsigned long int my_pthread_t;
 #define pthread_t my_pthread_t
 
+//context
 #define STACK_S 8192
 
 #define MUTEX_WAIT 5
-#define MAX_SIZE 15
-#define INTERVAL 200
+#define MAX_SIZE 200
+#define INTERVAL 2000
 
 /* mutex struct definition */
 typedef struct my_pthread_mutex_t

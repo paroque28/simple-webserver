@@ -42,9 +42,9 @@ void scheduler(int signum)
   }
 
 
-  //Time elapsed = difference between max interval size and time remaining in timer
-  //if the time splice runs to completion the else body goes,
-  //else the if body goes, and the actual amount of time that passed is added to timeelapsed
+  // Time elapsed = difference between max interval size and time remaining in timer
+  // if the time splice doesn't deplates the else body goes 
+  // the actual amount of time that passed is added to timeelapsed
   int timeSpent = (int)currentTime.it_value.tv_usec;
   int expectedInterval = INTERVAL * (currentThread->priority + 1);
   //printf("timeSpent: %i, expectedInterval%i\n", timeSpent, expectedInterval);
@@ -62,13 +62,11 @@ void scheduler(int signum)
   //printf("total time spend so far before boost_thread_priorities cycle %i and the amount of time spent just now %i\n", timeElapsed, timeSpent);
   //printf("[Thread %ld] Total time: %d from time remaining: %d out of %d\n", currentThread->tid, timeElapsed, (int)currentTime.it_value.tv_usec, INTERVAL * (currentThread->priority + 1));
 
-  //check for boost_thread_priorities cycle
+  //check for threads with great timeElapsed
   if(timeElapsed >= 10000000)
   {
-    printf("\n[Thread %ld] boost_thread_priorities TRIGGERED\n\n",currentThread->tid);
+    printf("\n[Thread %ld] boost TRIGGERED\n\n",currentThread->tid);
     boost_thread_priorities();
-
-    //reset counter
     timeElapsed = 0;
   }
 
@@ -78,12 +76,9 @@ void scheduler(int signum)
 
   switch(currentThread->status)
   {
-    case READY: //READY signifies that the current thread is in the running queue
-
-      if(currentThread->priority < MAX_SIZE - 1)
-      {
-	currentThread->priority++;
-      }
+    case READY: //READY current thread is in the running queue
+      //Higher the priority
+      if(currentThread->priority < MAX_SIZE - 1)  currentThread->priority++;
 
       //put back the thread that just finished back into the running queue
       enqueue(&runningQueue[currentThread->priority], currentThread);
@@ -110,7 +105,7 @@ void scheduler(int signum)
 
       break;
    
-    case YIELD: //YIELD signifies pthread yield was called; don't update priority
+    case YIELD: //YIELD pthread yield was called; don't update priority
 
       currentThread = NULL;
 
@@ -122,17 +117,10 @@ void scheduler(int signum)
 	  break;
         }
       }
-      
-      if(currentThread != NULL)
-      {
-	//later consider enqueuing it to the waiting queue instead
-	enqueue(&runningQueue[prevThread->priority], prevThread);
-      }
-      else
-      {
-	currentThread = prevThread;
-      }
-
+      //IF then later consider enqueuing it to the waiting queue instead
+      if(currentThread != NULL)  enqueue(&runningQueue[prevThread->priority], prevThread);
+      else currentThread = prevThread;
+    
       break;
 
     case WAIT:
@@ -181,7 +169,7 @@ void scheduler(int signum)
 
       break;
 
-    case JOIN: //JOIN corresponds with a call to pthread_join
+    case JOIN: //JOIN pthread_join
 
       currentThread = NULL;
       //notice how we don't enqueue the thread that just finished back into the running queue
@@ -203,7 +191,7 @@ void scheduler(int signum)
       
       break;
       
-    case MUTEX_WAIT: //MUTEX_WAIT corresponds with a thread waiting for a mutex lock
+    case MUTEX_WAIT: //MUTEX_WAIT mutex lock
 
       //Don't add current to queue: already in mutex queue
       currentThread = NULL;
