@@ -214,7 +214,9 @@ stop_webserver.sh
 | Leftover bugs from ShortAssigment1 fix                        |  23-3-19         |  4     |
 | Leftover bugs from ShortAssigment1 fix                        |  26-3-19         |  4     |
 | First phase document elaboration                              |  26-3-19         |  2     |
-| **Total hours:**                                                  |  -------- |  12    |
+| Second phase document elaboration                             |  04-4-19         |  2     |
+| my_pthread library and threaded webserver testing             |  05-3-19         |  3     |
+| **Total hours:**                                             |  -------- |  17    |
 
 
 
@@ -261,3 +263,13 @@ stop_webserver.sh
 **[9]** Audsley, N., & Burns, A. (2019). REAL-TIME SYSTEM SCHEDULING. Retrieved from http://beru.univ-brest.fr/~singhoff/cheddar/publications/audsley95.pdf
 
 **[10]** Milevyo, (2015). Http protocol in C. Retrieved from https://stackoverflow.com/questions/33960385/how-to-download-a-file-from-http-using-c
+
+
+
+
+
+
+
+
+
+
