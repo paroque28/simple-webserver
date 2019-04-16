@@ -28,8 +28,6 @@
 typedef struct sigaction mySig;
 
 // TOOLS ----------------
-
-void boost_thread_priorities();
 void garbage_collection();
 void initializeMainContext();
 void initializeGarbageContext();
@@ -74,5 +72,23 @@ void my_sleep(unsigned long time);
 #define pthread_mutex_lock(a) my_pthread_mutex_lock(a)
 #define pthread_mutex_unlock(a) my_pthread_mutex_unlock(a)
 #define pthread_mutex_destroy(a) my_pthread_mutex_destroy(a)
+
+
+
+// Variables
+
+tcb *currentThread, *prevThread;
+list runningQueue[MAX_SIZE];
+list allThreads[MAX_SIZE];
+ucontext_t cleanup;
+sigset_t signal_set;
+mySig sig;
+
+struct itimerval timer, currentTime;
+
+int mainContextInitialized;
+int timeElapsed;
+int threadCount;
+int operationInProgress;
 
 #endif

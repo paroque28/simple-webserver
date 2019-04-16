@@ -35,8 +35,8 @@ void* doSomeThing(void *arg)
     void * ptr = malloc(sizeof(int)*100); // Allocate 100 ints
     int i = 0;
     while(run){
-        my_sleep(2);
-        printf("Hi %d from %ld.\n", i++, *id);
+        my_sleep(3);
+        printf("Hi #%d from thread 0x0%ld.\n", i++, *id);
     }
     free(ptr);
 
@@ -65,7 +65,7 @@ void* doSomeThing(void *arg)
     
     //Wait one minute
     for( int i=0; i < 5; i++) {
-        printf("Sleep %d\n", i );
+        //printf("Sleep %d\n", i );
         my_sleep(1);
         
     }

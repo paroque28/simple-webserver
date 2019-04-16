@@ -1,32 +1,17 @@
 #include "my_pthread.h"
 
-tcb *currentThread, *prevThread;
-list *runningQueue[MAX_SIZE];
-list *allThreads[MAX_SIZE];
-ucontext_t cleanup;
-sigset_t signal_set;
-mySig sig;
-
-struct itimerval timer, currentTime;
-
-int mainContextInitialized;
-int timeElapsed;
-int threadCount;
-int operationInProgress;
-
 void scheduler(int signum)
 {
-  // printf("Scheduler in!\n");
   if(operationInProgress)
   {
     printf("Operation in Progress!\n");
     return;
   }
+  
   //Record remaining time
   getitimer(ITIMER_VIRTUAL, &currentTime);
-  // printf("Get Time\n");
 
-  // printf("\n[Thread %ld] Signaled from %ld, time left %i\n", currentThread->tid,currentThread->tid, (int)currentTime.it_value.tv_usec);
+  // /printf("\n[Thread %ld] Signaled from %ld, time left %i\n", currentThread->tid,currentThread->tid, (int)currentTime.it_value.tv_usec);
 
   //Disable Timer to prevent SIGVALRM
   timer.it_value.tv_sec = 0;
@@ -59,16 +44,9 @@ void scheduler(int signum)
 
   
   timeElapsed += timeSpent;
-  //printf("total time spend so far before boost_thread_priorities cycle %i and the amount of time spent just now %i\n", timeElapsed, timeSpent);
-  //printf("[Thread %ld] Total time: %d from time remaining: %d out of %d\n", currentThread->tid, timeElapsed, (int)currentTime.it_value.tv_usec, INTERVAL * (currentThread->priority + 1));
 
-  //check for threads with great timeElapsed
-  if(timeElapsed >= 10000000)
-  {
-    printf("\n[Thread %ld] boost TRIGGERED\n\n",currentThread->tid);
-    boost_thread_priorities();
-    timeElapsed = 0;
-  }
+  //printf("[Thread %ld] Total time: %d from time remaining: %d out of %d\n", currentThread->tid, timeElapsed, (int)currentTime.it_value.tv_usec, INTERVAL);
+
 
   prevThread = currentThread;
   
@@ -77,8 +55,6 @@ void scheduler(int signum)
   switch(currentThread->status)
   {
     case READY: //READY current thread is in the running queue
-      //Higher the priority
-      if(currentThread->priority < MAX_SIZE - 1)  currentThread->priority++;
 
       //put back the thread that just finished back into the running queue
       enqueue(&runningQueue[currentThread->priority], currentThread);
@@ -223,7 +199,7 @@ void scheduler(int signum)
 
   //reset timer to 25ms times thread priority
   timer.it_value.tv_sec = 0;
-  timer.it_value.tv_usec = INTERVAL * (currentThread->priority + 1) ;
+  timer.it_value.tv_usec = INTERVAL; //* (currentThread->priority + 1) ;
   timer.it_interval.tv_sec = 0;
   timer.it_interval.tv_usec = 0;
   int ret = setitimer(ITIMER_VIRTUAL, &timer, NULL);
@@ -250,26 +226,6 @@ void scheduler(int signum)
 
 }
 
-//thread priority boosting
-void boost_thread_priorities()
-{
-  int i;
-  tcb *tgt;
-
-
-  //template for priority inversion
-  for(i = 1; i < MAX_SIZE; i++)
-  {
-    while(runningQueue[i] != NULL)
-    {
-      tgt = dequeue(&runningQueue[i]);
-      tgt->priority = 0;
-      enqueue(&runningQueue[0], tgt);
-    }
-  }
-
-  return;
-}
 
 void garbage_collection()
 {
@@ -293,19 +249,19 @@ void garbage_collection()
   int key = currentThread->tid % MAX_SIZE;
   if(allThreads[key]->thread->tid == currentThread->tid)
   {
-    list *removal = allThreads[key];
+    list removal = allThreads[key];
     allThreads[key] = allThreads[key]->next;
     free(removal); 
   }
 
   else
   {
-    list *temp = allThreads[key];
+    list temp = allThreads[key];
     while(allThreads[key]->next != NULL)
     {
       if(allThreads[key]->next->thread->tid == currentThread->tid)
       {
-	list *removal = allThreads[key]->next;
+	list removal = allThreads[key]->next;
 	allThreads[key]->next = removal->next;
 	free(removal);
         break;
@@ -350,7 +306,9 @@ void initializeGarbageContext()
 {
   //Set handler of timer
   signal(SIGVTALRM, scheduler);
-  initializeQueues(runningQueue,allThreads,runningQueue); //set everything to NULL
+  //set everything to NULL
+  initializeList(allThreads ,MAX_SIZE); 
+  initializeList(runningQueue ,MAX_SIZE); 
     
   //Initialize garbage collector
   getcontext(&cleanup);

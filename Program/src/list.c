@@ -1,21 +1,21 @@
 #include "list.h"
 
 //add to queue
-void enqueue(list** q, tcb* insert)
+void enqueue(list* q, tcb* insert)
 {
-  list *queue = *q;
+  list queue = *q;
 
   if(queue == NULL)
   {
-    queue = (list*)malloc(sizeof(list));
+    queue = (list)malloc(sizeof(list));
     queue->thread = insert;
     queue->next = queue;
     *q = queue;
     return;
   }
 
-  list *front = queue->next;
-  queue->next = (list*)malloc(sizeof(list));
+  list front = queue->next;
+  queue->next = (list)malloc(sizeof(list));
   queue->next->thread = insert;
   queue->next->next = front;
 
@@ -25,16 +25,16 @@ void enqueue(list** q, tcb* insert)
 }
 
 //remove from queue
-tcb* dequeue(list** q)
+tcb* dequeue(list* q)
 {
-  list *queue = *q;
+  list queue = *q;
   if(queue == NULL)
   {
     return NULL;
   }
   //queue is the last element in a queue at level i
   //first get the thread control block to be returned
-  list *front = queue->next;
+  list front = queue->next;
   tcb *tgt = queue->next->thread;
   //check if there is only one element left in the queue
   //and assign null/free appropriately
@@ -57,20 +57,20 @@ tcb* dequeue(list** q)
 }
 
 //insert to list
-void l_insert(list** q, tcb* jThread) //Non-circular Linked List
+void l_insert(list* q, tcb* jThread) //Non-circular Linked List
 {
-  list *queue = *q;
+  list queue = *q;
 
   if(queue == NULL)
   {
-    queue = (list*)malloc(sizeof(list));
+    queue = (list)malloc(sizeof(list));
     queue->thread = jThread;
     queue->next = NULL;
     *q = queue;
     return;
   }
 
-  list *newNode = (list*)malloc(sizeof(list));
+  list newNode = (list)malloc(sizeof(list));
   newNode->thread = jThread;
 
   //append to front of LL
@@ -82,16 +82,16 @@ void l_insert(list** q, tcb* jThread) //Non-circular Linked List
 }
 
 //remove from list
-tcb* l_remove(list** q)
+tcb* l_remove(list* q)
 {
-  list *queue = *q;
+  list queue = *q;
 
   if(queue == NULL)
   {
     return NULL;
   }
 
-  list *temp = queue;
+  list temp = queue;
   tcb *ret = queue->thread;
   queue = queue->next;
   free(temp);
@@ -101,12 +101,12 @@ tcb* l_remove(list** q)
 
 
 //Search table for a tcb given a uint
-tcb* thread_search(my_pthread_t tid, list ** allThreads)
+tcb* thread_search(my_pthread_t tid, list * allThreads)
 {
   int key = tid % MAX_SIZE;
   tcb *ret = NULL;
 
-  list *temp = allThreads[key];
+  list temp = allThreads[key];
   while(allThreads[key] != NULL)
   {
     if(allThreads[key]->thread->tid == tid)
@@ -124,13 +124,12 @@ tcb* thread_search(my_pthread_t tid, list ** allThreads)
 
 
 
-void initializeQueues(list** runQ, list ** allThreads, list ** runningQueue) 
+void initializeList(list* list, size_t size) 
 {
   int i;
-  for(i = 0; i < MAX_SIZE; i++) 
+  for(i = 0; i < size; i++) 
   {
-    runningQueue[i] = NULL;
-    allThreads[i] = NULL;
+    list[i] = NULL;
   }
   
 }

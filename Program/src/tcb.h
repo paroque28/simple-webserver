@@ -3,7 +3,8 @@
 
 #include <ucontext.h>
 
-typedef struct list list;
+typedef struct node node;
+typedef node* list;
 
 typedef unsigned long int my_pthread_t;
 #define pthread_t my_pthread_t
@@ -13,7 +14,7 @@ typedef unsigned long int my_pthread_t;
 
 #define MUTEX_WAIT 5
 #define MAX_SIZE 200
-#define INTERVAL 2000
+#define INTERVAL 100000 // HALF second
 
 /* mutex struct definition */
 typedef struct my_pthread_mutex_t
@@ -22,7 +23,7 @@ typedef struct my_pthread_mutex_t
   int available;
   int holder;
   int initialized;
-  list* queue;
+  list queue;
 
 } my_pthread_mutex_t;
 
@@ -31,13 +32,14 @@ typedef struct threadControlBlock
 {
   my_pthread_t tid;
   unsigned int priority;
+  unsigned int tickets;
   // Status
   //0 = ready to run, 1 = yielding, 2 = waiting, 3 = exiting, 4 = joining, 5 = waiting for mutex lock
   int status;
   void* jVal;
   void* retVal;
   ucontext_t *context;
-  struct list* joinQueue;
+  list joinQueue;
 } tcb;
 
 

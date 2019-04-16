@@ -49,6 +49,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define LOG   44
 #define MAX_THREADS 1000
 
+#define THREADED
+
 #if !defined(FORK) && !defined(FIFO) && !defined(THREADED)
 #error You must define FORK or FIFO or THREADED before compiling webserver use -D flag on gcc or TYPE= on make
 #endif

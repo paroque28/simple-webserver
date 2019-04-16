@@ -8,17 +8,19 @@
 
 typedef struct threadControlBlock tcb;
 
-typedef struct list
+typedef struct node
 {
   tcb* thread;
-  struct list* next;
-}list;
+  struct node* next;
+}node;
 
-void enqueue(list**, tcb*);
-tcb* dequeue(list**);
-void l_insert(list**, tcb*);
-tcb* l_remove(list**);
-tcb* thread_search(my_pthread_t, list ** allThreads);
-void initializeQueues(list**, list ** allThreads, list ** runningQueue);
+typedef node* list;
+
+void enqueue(list*, tcb*);
+tcb* dequeue(list*);
+void l_insert(list*, tcb*);
+tcb* l_remove(list*);
+tcb* thread_search(my_pthread_t, list * allThreads);
+void initializeList(list*, size_t);
 
 #endif
