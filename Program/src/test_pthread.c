@@ -7,6 +7,13 @@
 #include <stdlib.h>
 #include <signal.h>
 
+void test_sleep(unsigned long seconds){
+    time_t start = time(NULL);
+    while (1){
+        time_t now = time(NULL);
+        if(now >= start + 1 * seconds) return;
+    }
+}
 //pthread_mutex_t mutex1;
 pthread_t tid[2000];
 int run = 1;
@@ -35,7 +42,7 @@ void* doSomeThing(void *arg)
     void * ptr = malloc(sizeof(int)*100); // Allocate 100 ints
     int i = 0;
     while(run){
-        my_sleep(3);
+        test_sleep(3);
         printf("Hi #%d from thread 0x0%ld.\n", i++, *id);
     }
     free(ptr);
@@ -66,7 +73,7 @@ void* doSomeThing(void *arg)
     //Wait one minute
     for( int i=0; i < 5; i++) {
         //printf("Sleep %d\n", i );
-        my_sleep(1);
+        test_sleep(1);
         
     }
 
@@ -80,6 +87,7 @@ void* doSomeThing(void *arg)
         pthread_join( tid[i] , NULL);
         i++;
     }
+    printf("Threads Joined\n");
 
     return 0;
  }
