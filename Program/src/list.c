@@ -17,6 +17,7 @@ void insert(head_t* queue, tcb* thread){
 
 tcb* dequeue(head_t* queue){
   node_t * threadNode = TAILQ_FIRST(queue);
+  if (threadNode == NULL) return NULL;
   tcb* thread = threadNode->thread;
   TAILQ_REMOVE(queue, threadNode, nodes);
   free(threadNode);

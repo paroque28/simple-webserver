@@ -62,7 +62,7 @@ int my_pthread_join(my_pthread_t thread, void **value_ptr);
 
 
 /* initial the mutex lock */
-int my_pthread_mutex_init(my_pthread_mutex_t *mutex, const pthread_mutexattr_t *mutexattr);
+int my_pthread_mutex_init(my_pthread_mutex_t *mutex, const my_pthread_mutexattr_t *mutexattr);
 /* aquire the mutex lock */
 int my_pthread_mutex_lock(my_pthread_mutex_t *mutex);
 /* release the mutex lock */
@@ -78,14 +78,14 @@ void my_sleep(unsigned long time);
 
 
 #define pthread_mutex_t my_pthread_mutex_t
-#define pthread_create(a, b, c, d) my_pthread_create(a, b, c, d)
+#define pthread_create(thread, attr, function, arg) my_pthread_create(thread, attr, function, arg)
 #define pthread_yield() my_pthread_yield()
-#define pthread_exit(a) my_pthread_exit(a)
-#define pthread_join(a, b) my_pthread_join(a, b)
-#define pthread_mutex_init(a, b) my_pthread_mutex_init(a, b)
-#define pthread_mutex_lock(a) my_pthread_mutex_lock(a)
-#define pthread_mutex_unlock(a) my_pthread_mutex_unlock(a)
-#define pthread_mutex_destroy(a) my_pthread_mutex_destroy(a)
+#define pthread_exit(value_ptr) my_pthread_exit(value_ptr)
+#define pthread_join(thread, value_ptr) my_pthread_join(thread, value_ptr)
+#define pthread_mutex_init(mutex, mutexattr) my_pthread_mutex_init(mutex, mutexattr)
+#define pthread_mutex_lock(mutex) my_pthread_mutex_lock(mutex)
+#define pthread_mutex_unlock(mutex) my_pthread_mutex_unlock(mutex)
+#define pthread_mutex_destroy(mutex) my_pthread_mutex_destroy(mutex)
 
 
 

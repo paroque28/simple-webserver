@@ -1,11 +1,13 @@
 CC=gcc
 DEPS= $(wildcard src/*.c) $(wildcard src/*.h)
+PTHREAD_DEPS=src/test_pthread.c src/my_pthread.c src/my_pthread_mutex.c src/my_pthread_debug.c src/list.c
+PTHREAD_HEADERS=src/my_pthread.h src/tcb.h src/list.h
 default: webserver
 webserver: $(DEPS)
 		$(CC) src/webserver.c -o webserver -D$(TYPE) -lpthread -g -ggdb
 
-create_n_threads: src/test_pthread.c src/my_pthread.c src/my_pthread_debug.c src/my_pthread.h src/tcb.h src/list.c src/list.h
-		$(CC) src/test_pthread.c src/my_pthread.c src/my_pthread_debug.c src/list.c -o create_n_threads -g -ggdb #-lpthread
+create_n_threads: $(PTHREAD_DEPS) $(PTHREAD_HEADERS)
+		$(CC) $(PTHREAD_DEPS) -o create_n_threads -g -ggdb #-lpthread
 
 .PHONY : clean
 clean:

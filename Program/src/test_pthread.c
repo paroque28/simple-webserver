@@ -14,7 +14,7 @@ void test_sleep(unsigned long seconds){
         if(now >= start + 1 * seconds) return;
     }
 }
-//pthread_mutex_t mutex1;
+pthread_mutex_t mutex1;
 pthread_t tid[2000];
 int run = 1;
 
@@ -33,19 +33,23 @@ void printPt(pthread_t pt) {
 void* doSomeThing(void *arg)
 {
     pthread_t* id = ((pthread_t*) arg);
-    
-    //pthread_mutex_lock( &mutex1 );
+    printf("Mutexlock from thread %ld\n",*id);
+    pthread_mutex_lock( &mutex1 );
     printPt(*id);
-    //pthread_mutex_unlock( &mutex1 );
-
+    pthread_mutex_unlock( &mutex1 );
+    printf("Mutex unlock from thread %ld\n",*id);
 
     void * ptr = malloc(sizeof(int)*100); // Allocate 100 ints
     int i = 0;
     while(run){
-        test_sleep(1);
+        //printf("Mutexlock from thread %ld\n",*id);
+        pthread_mutex_lock( &mutex1 );
+        test_sleep(1);     
         printf("Hi #%d ", i++);
         printf("from thread ");
         printf("0x0%ld.\n", *id);
+        pthread_mutex_unlock( &mutex1 );  
+        printf("Mutex unlock from thread %ld\n",*id);
     }
     free(ptr);
 
@@ -55,11 +59,18 @@ void* doSomeThing(void *arg)
 }
 
  int main(int argc, char *argv[]) {
-    printf("Starting. Pid: %d\n", (int)getpid());
     int i = 0;
     int err;
     // Error if no number of threads specified
     if (argc != 2) return 1;
+
+    //Initialize mutex
+    if (pthread_mutex_init(&mutex1, NULL) != 0)
+    {
+        printf("\n mutex init failed\n");
+        return 1;
+    }
+
     while(i < atoi(argv[1]))
     {
         pthread_t* number = malloc(sizeof (pthread_t));
@@ -89,7 +100,7 @@ void* doSomeThing(void *arg)
         pthread_join( tid[i] , NULL);
         i++;
     }
-
+    pthread_mutex_destroy(&mutex1);
     return 0;
  }
 

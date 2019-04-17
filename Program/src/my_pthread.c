@@ -20,7 +20,7 @@ void scheduler(int signum)
   // timer.it_interval.tv_usec = 0;
   // setitimer(ITIMER_VIRTUAL, &timer, NULL);
 
-  if(signum != SIGVTALRM && signum != SIGUSR1)
+  if(signum != SIGVTALRM && signum != SIGUSR1 && signum != SIGUSR2)
   {
     printf("[Thread %ld] Signal Received: %d.\nExiting...\n", currentThread->tid, signum);
     exit(signum);
@@ -33,7 +33,7 @@ void scheduler(int signum)
     }
     //printf("Tick!\n");
   }
-  //if(signum == SIGUSR1) printf("Scheduler Triggered!\n");
+  // /if(signum == SIGUSR2) printf("Scheduler Triggered from Mutex!\n");
 
   // Time elapsed = difference between max interval size and time remaining in timer
   // if the time splice doesn't deplates the else body goes 
@@ -54,9 +54,12 @@ void scheduler(int signum)
 
   //printf("[Thread %ld] Total time: %d from time remaining: %d out of %d\n", currentThread->tid, timeElapsed, (int)currentTime.it_value.tv_usec, INTERVAL);
 
-
+  if(currentThread->tid >= 100){
+    printf("wtf\n");
+      my_pthread_print_queues();
+  } 
   prevThread = currentThread;
-  
+
   int i;
   switch(currentThread->status)
   {
@@ -130,8 +133,9 @@ void scheduler(int signum)
       
       break;
       
-    case MUTEX_WAIT: //MUTEX_WAIT mutex lock
-
+    case MUTEX_WAIT: //Wating for mutex lock
+      //printf("Status Mutex wait current: %ld\n", currentThread->tid);
+      //my_pthread_print_queues();
       //Don't add current to queue: already in mutex queue
       currentThread = dequeue(&runningQueue);
 
@@ -149,7 +153,12 @@ void scheduler(int signum)
       exit(-1);
       break;
   }
-	
+  if(currentThread == NULL)
+  {
+
+    printf("Current Thread NULL, prevThread %ld\n Need to investigate error!\n", prevThread->tid);
+    exit(1);
+  }
   currentThread->status = READY;
 
   reset_timer();
@@ -229,7 +238,7 @@ void initializeMainContext()
 
   mainContextInitialized = 1;
 
-  insert(&allThreads, mainThread);
+  enqueue(&allThreads, mainThread);
 
 
   currentThread = mainThread;
@@ -259,7 +268,7 @@ void initializeGarbageContext()
 }
 
 /* create a new thread */
-int my_pthread_create(my_pthread_t * thread, pthread_attr_t * attr, void *(*function)(void*), void * arg)
+int my_pthread_create(my_pthread_t * thread, my_pthread_attr_t * attr, void *(*function)(void*), void * arg)
 {
 
   if(!mainContextInitialized)

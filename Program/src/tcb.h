@@ -13,6 +13,7 @@ typedef struct threadControlBlock tcb;
 
 typedef unsigned long int my_pthread_t;
 typedef void my_pthread_attr_t;
+typedef void my_pthread_mutexattr_t;
 
 #define pthread_t my_pthread_t
 #define pthread_attr_t my_pthread_attr_t
@@ -27,7 +28,6 @@ typedef void my_pthread_attr_t;
 typedef struct my_pthread_mutex_t
 {
   int locked;
-  int available;
   int holder;
   int initialized;
   head_t* queue;
@@ -38,8 +38,6 @@ typedef struct my_pthread_mutex_t
 typedef struct threadControlBlock
 {
   my_pthread_t tid;
-  unsigned int priority;
-
   //Real-Time
   unsigned long quantumsRun;
   unsigned long lastRun;
