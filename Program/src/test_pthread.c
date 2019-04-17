@@ -73,10 +73,10 @@ void* doSomeThing(void *arg)
 
     
     //Wait one minute
-    for( int i=0; i < 5; i++) {
-        //printf("Sleep %d\n", i );
+    for( int i=0; i < 6; i++) {
         test_sleep(1);
-        
+        printf("\t######Sleep %d######\n", i + 1);
+        //my_pthread_print_queues();
     }
 
 

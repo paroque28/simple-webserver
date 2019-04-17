@@ -34,6 +34,9 @@ void garbage_collection();
 void initializeMainContext();
 void initializeGarbageContext();
 
+// DEBUG ----------------
+void my_pthread_print_queues();
+
 
 // THREAD ----------------
 int my_pthread_create(my_pthread_t * thread, pthread_attr_t * attr, void *(*function)(void*), void * arg);

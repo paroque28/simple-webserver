@@ -21,9 +21,13 @@ typedef TAILQ_HEAD(head_s, node) head_t;
 
 //Methods
 
+void initQueue(head_t* queue);
 void enqueue(head_t* queue, tcb* thread);
 void insert(head_t* queue, tcb* thread);
 
 tcb* dequeue(head_t* queue);
+
+
+void printQueue(head_t* queue);
 
 #endif

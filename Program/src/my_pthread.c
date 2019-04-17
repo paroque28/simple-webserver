@@ -11,7 +11,7 @@ void scheduler(int signum)
   //Record remaining time
   getitimer(ITIMER_VIRTUAL, &currentTime);
 
-  // /printf("\n[Thread %ld] Signaled from %ld, time left %i\n", currentThread->tid,currentThread->tid, (int)currentTime.it_value.tv_usec);
+  //printf("\n[Thread %ld] Signaled from %ld, time left %i\n", currentThread->tid,currentThread->tid, (int)currentTime.it_value.tv_usec);
 
   //Disable Timer to prevent SIGVALRM
   timer.it_value.tv_sec = 0;
@@ -60,7 +60,6 @@ void scheduler(int signum)
       //if(scheduler == fifo){}
       // enqueue currentThread into running queue
       enqueue(&runningQueue, currentThread);
-
       // Dequeue new thread from runningQueue
       currentThread =  dequeue(&runningQueue);
 
@@ -187,7 +186,7 @@ void scheduler(int signum)
 
 void garbage_collection()
 {
-  printf("Garbage collection!\n");
+  //printf("Garbage collection!\n");
   operationInProgress = 1;
   currentThread->status = EXIT;
   
@@ -199,16 +198,12 @@ void garbage_collection()
   //dequeue all threads waiting on this one to finish
   while(!TAILQ_EMPTY(currentThread->joinQueue))
   {
-    jThreadNode = TAILQ_FIRST(currentThread->joinQueue);
-    jThread = jThreadNode->thread;
+    jThread = dequeue(currentThread->joinQueue);
 
-    TAILQ_REMOVE(currentThread->joinQueue, jThreadNode, nodes);
-    free(jThreadNode);
-
-    printf("Join queue of: %ld join: %ld\n", currentThread->tid, jThread->tid);
+    //printf("Join queue of: %ld join: %ld\n", currentThread->tid, jThread->tid);
     jThread->retVal = currentThread->jVal;
 
-    TAILQ_INSERT_HEAD(&runningQueue, jThreadNode, nodes);
+    insert(&runningQueue, jThread);
   }
 
   //free stored node in allThreads
@@ -244,7 +239,7 @@ void initializeMainContext()
   mainThread->retVal = NULL;
   mainThread->status = READY;
   mainThread->joinQueue = malloc(sizeof(head_t*));
-  TAILQ_INIT(mainThread->joinQueue);
+  initQueue(mainThread->joinQueue);
 
   mainContextInitialized = 1;
 
@@ -260,8 +255,8 @@ void initializeGarbageContext()
   //Set handler of timer
   signal(SIGVTALRM, scheduler);
   //set everything to NULL
-  TAILQ_INIT(&allThreads);
-  TAILQ_INIT(&runningQueue);
+  initQueue(&allThreads);
+  initQueue(&runningQueue);
     
   //Initialize garbage collector
   getcontext(&cleanup);
@@ -303,7 +298,7 @@ int my_pthread_create(my_pthread_t * thread, pthread_attr_t * attr, void *(*func
   newThread->retVal = NULL;
   newThread->status = READY;
   newThread->joinQueue = malloc(sizeof(head_t*));
-  TAILQ_INIT(newThread->joinQueue);
+  initQueue(newThread->joinQueue);
 
   *thread = threadCount;
   threadCount++;
