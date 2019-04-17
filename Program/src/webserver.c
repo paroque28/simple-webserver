@@ -49,8 +49,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define LOG   44
 #define MAX_THREADS 1000
 
-#define THREADED
-
 #if !defined(FORK) && !defined(FIFO) && !defined(THREADED)
 #error You must define FORK or FIFO or THREADED before compiling webserver use -D flag on gcc or TYPE= on make
 #endif
@@ -158,7 +156,7 @@ void log_event(int type, char *s1, char *s2, int num)
 struct web_args {
     int fd;
     int hit;
-	int thread_id;
+	int thread_id;  //or fork
 };
 
 //This function is used to control browser requests

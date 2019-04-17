@@ -31,8 +31,8 @@ void scheduler(int signum)
   // if the time splice doesn't deplates the else body goes 
   // the actual amount of time that passed is added to timeelapsed
   int timeSpent = (int)currentTime.it_value.tv_usec;
-  int expectedInterval = INTERVAL * (currentThread->priority + 1);
-  //printf("timeSpent: %i, expectedInterval%i\n", timeSpent, expectedInterval);
+  int expectedInterval = INTERVAL;
+  //printf("timeSpent: %i, expectedInterval %i\n", timeSpent, expectedInterval);
   if(timeSpent < 0 || timeSpent > expectedInterval)
   {
     timeSpent = 0;
@@ -51,50 +51,30 @@ void scheduler(int signum)
   prevThread = currentThread;
   
   int i;
-
   switch(currentThread->status)
   {
     case READY: //READY current thread is in the running queue
 
       //put back the thread that just finished back into the running queue
-      enqueue(&runningQueue[currentThread->priority], currentThread);
 
-      currentThread = NULL;
+      //if(scheduler == fifo){}
+      // enqueue currentThread into running queue
+      enqueue(&runningQueue, currentThread);
 
-      for(i = 0; i < MAX_SIZE; i++) 
-      {
-        if (runningQueue[i] != NULL)
-        { 
-          //getting a new thread to run
-          currentThread = dequeue(&runningQueue[i]);
-	  break;
-        }
-	else
-	{
-	}
-      }
-
-      if(currentThread == NULL)
-      {
-        currentThread = prevThread;
-      }
+      // Dequeue new thread from runningQueue
+      currentThread =  dequeue(&runningQueue);
 
       break;
    
     case YIELD: //YIELD pthread yield was called; don't update priority
 
-      currentThread = NULL;
+      // Dequeue new thread from runningQueue
+      currentThread =dequeue(&runningQueue);
 
-      for (i = 0; i < MAX_SIZE; i++) 
-      {
-        if (runningQueue[i] != NULL)
-        { 
-          currentThread = dequeue(&runningQueue[i]);
-	  break;
-        }
-      }
       //IF then later consider enqueuing it to the waiting queue instead
-      if(currentThread != NULL)  enqueue(&runningQueue[prevThread->priority], prevThread);
+      if(currentThread != NULL){
+        enqueue(&runningQueue, prevThread);
+      }
       else currentThread = prevThread;
     
       break;
@@ -106,15 +86,8 @@ void scheduler(int signum)
     case EXIT:
 
       currentThread = NULL;
-
-      for (i = 0; i < MAX_SIZE; i++) 
-      {
-        if (runningQueue[i] != NULL)
-        {
-          currentThread = dequeue(&runningQueue[i]);
-	  break;
-        }
-      }
+      currentThread = dequeue(&runningQueue);
+      
 
       if(currentThread == NULL)
       {
@@ -150,14 +123,7 @@ void scheduler(int signum)
       currentThread = NULL;
       //notice how we don't enqueue the thread that just finished back into the running queue
       //we just go straight to getting another thread
-      for (i = 0; i < MAX_SIZE; i++) 
-      {
-        if (runningQueue[i] != NULL)
-        { 
-          currentThread = dequeue(&runningQueue[i]);
-	  break;
-        }
-      }
+      currentThread = dequeue(&runningQueue);
 
       if(currentThread == NULL)
       {
@@ -170,21 +136,13 @@ void scheduler(int signum)
     case MUTEX_WAIT: //MUTEX_WAIT mutex lock
 
       //Don't add current to queue: already in mutex queue
-      currentThread = NULL;
+      currentThread = dequeue(&runningQueue);
 
-      for (i = 0; i < MAX_SIZE; i++) 
-      {
-        if (runningQueue[i] != NULL)
-        { 
-          currentThread = dequeue(&runningQueue[i]);
-	  break;
-        }
-      }
 
       if(currentThread == NULL)
       {
         printf("DEADLOCK DETECTED\n");
-	exit(EXIT_FAILURE);
+	      exit(EXIT_FAILURE);
       }
 
       break;
@@ -229,6 +187,7 @@ void scheduler(int signum)
 
 void garbage_collection()
 {
+  printf("Garbage collection!\n");
   operationInProgress = 1;
   currentThread->status = EXIT;
   
@@ -236,51 +195,43 @@ void garbage_collection()
   if(!mainContextInitialized) exit(EXIT_SUCCESS);
 
   tcb *jThread = NULL; //any threads waiting on the one being garbage collected
-
+  node_t *jThreadNode = NULL;
   //dequeue all threads waiting on this one to finish
-  while(currentThread->joinQueue != NULL)
+  while(!TAILQ_EMPTY(currentThread->joinQueue))
   {
-    jThread = l_remove(&currentThread->joinQueue);
+    jThreadNode = TAILQ_FIRST(currentThread->joinQueue);
+    jThread = jThreadNode->thread;
+
+    TAILQ_REMOVE(currentThread->joinQueue, jThreadNode, nodes);
+    free(jThreadNode);
+
+    printf("Join queue of: %ld join: %ld\n", currentThread->tid, jThread->tid);
     jThread->retVal = currentThread->jVal;
-    enqueue(&runningQueue[jThread->priority], jThread);
+
+    TAILQ_INSERT_HEAD(&runningQueue, jThreadNode, nodes);
   }
 
   //free stored node in allThreads
-  int key = currentThread->tid % MAX_SIZE;
-  if(allThreads[key]->thread->tid == currentThread->tid)
-  {
-    list removal = allThreads[key];
-    allThreads[key] = allThreads[key]->next;
-    free(removal); 
-  }
-
-  else
-  {
-    list temp = allThreads[key];
-    while(allThreads[key]->next != NULL)
+    node_t* i = NULL;
+    TAILQ_FOREACH( i , &allThreads, nodes)
     {
-      if(allThreads[key]->next->thread->tid == currentThread->tid)
-      {
-	list removal = allThreads[key]->next;
-	allThreads[key]->next = removal->next;
-	free(removal);
+      //Delete currentThread from allThreads
+      if(i->thread->tid == currentThread->tid){
         break;
       }
-      allThreads[key] = allThreads[key]->next;
     }
-
-    allThreads[key] = temp;
-  }
+    TAILQ_REMOVE(&allThreads, i, nodes);
+    free(i);
+    free(currentThread->joinQueue); //double check
 
   operationInProgress = 0;
 
-  raise(SIGVTALRM);
+  raise(SIGVTALRM); //TODO: change to sigusr1
 }
 
 
 void initializeMainContext()
 {
-  //printf("Initializing main context!\n");
   tcb *mainThread = (tcb*)malloc(sizeof(tcb));
   ucontext_t *mText = (ucontext_t*)malloc(sizeof(ucontext_t));
   getcontext(mText);
@@ -289,17 +240,19 @@ void initializeMainContext()
   mainThread->context = mText;
   mainThread->tid = 0;
   mainThread->priority = 0;
-  mainThread->joinQueue = NULL;
   mainThread->jVal = NULL;
   mainThread->retVal = NULL;
   mainThread->status = READY;
+  mainThread->joinQueue = malloc(sizeof(head_t*));
+  TAILQ_INIT(mainThread->joinQueue);
 
   mainContextInitialized = 1;
 
-  l_insert(&allThreads[0], mainThread);
+  insert(&allThreads, mainThread);
+
 
   currentThread = mainThread;
-  // printf("Main context initialized!\n");
+  printf("Main context initialized!\n");
 }
 
 void initializeGarbageContext()
@@ -307,8 +260,8 @@ void initializeGarbageContext()
   //Set handler of timer
   signal(SIGVTALRM, scheduler);
   //set everything to NULL
-  initializeList(allThreads ,MAX_SIZE); 
-  initializeList(runningQueue ,MAX_SIZE); 
+  TAILQ_INIT(&allThreads);
+  TAILQ_INIT(&runningQueue);
     
   //Initialize garbage collector
   getcontext(&cleanup);
@@ -346,18 +299,21 @@ int my_pthread_create(my_pthread_t * thread, pthread_attr_t * attr, void *(*func
   newThread->context = task;
   newThread->tid = threadCount;
   newThread->priority = 0;
-  newThread->joinQueue = NULL;
   newThread->jVal = NULL;
   newThread->retVal = NULL;
   newThread->status = READY;
+  newThread->joinQueue = malloc(sizeof(head_t*));
+  TAILQ_INIT(newThread->joinQueue);
 
   *thread = threadCount;
   threadCount++;
   //printf("Thread created: TID %ld\n", newThread->tid);
-  enqueue(&runningQueue[0], newThread);
-  int key = newThread->tid % MAX_SIZE;
 
-  l_insert(&allThreads[key], newThread);
+  //Enqueue newThread in running
+  enqueue(&runningQueue, newThread);
+
+  // Insert newThread in allThreads
+  insert(&allThreads, newThread);
 
   operationInProgress = 0;
 
@@ -366,11 +322,11 @@ int my_pthread_create(my_pthread_t * thread, pthread_attr_t * attr, void *(*func
   {
     //printf("New context: TID %ld\n", newThread->tid);
     initializeMainContext();
-    //raise(SIGVTALRM);
+    //raise(SIGVTALRM); //TODO
   }
   //printf("New thread created: TID %ld\n", newThread->tid);
   
-  raise(SIGVTALRM);
+  raise(SIGVTALRM);// TODO
   return 0;
 };
 
@@ -383,26 +339,31 @@ int my_pthread_join(my_pthread_t thread, void **value_ptr)
     initializeMainContext();
   }
   operationInProgress = 1;
-  //make sure thread can't wait on self
-  if(thread == currentThread->tid)
-  {return -1;}
 
-  tcb *tgt = thread_search(thread,allThreads);
-  
-  if(tgt == NULL)
+  //make sure thread can't wait on self
+  if(thread == currentThread->tid)  return -1;
+
+  // Search the thread in allThreads
+  tcb *tgt = NULL;
+  struct node * i = NULL;
+  TAILQ_FOREACH(i, &allThreads, nodes)
   {
-    return -1;
+    if (i->thread->tid == thread){
+      tgt = i->thread;
+      break;
+    }
   }
   
-  //Priority Inversion Case
-  tgt->priority = 0;
+  // if didn't find the thread
+  if(tgt == NULL)   return -1;
 
-  l_insert(&tgt->joinQueue, currentThread);
+  // Insert currentThread in the joinqueue of input thread
+  insert( tgt->joinQueue, currentThread);
 
   currentThread->status = JOIN;
 
   operationInProgress = 0;
-  raise(SIGVTALRM);
+  raise(SIGVTALRM); // TODO
 
   if(value_ptr == NULL)
   {return 0;}

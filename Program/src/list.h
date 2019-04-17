@@ -1,26 +1,29 @@
 #ifndef MY_LIST_H
 #define MY_LIST_H
 
-
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/queue.h>
 #include "tcb.h"
 
 typedef struct threadControlBlock tcb;
 
+//Queue
 typedef struct node
 {
-  tcb* thread;
-  struct node* next;
-}node;
+    tcb* thread;
+    TAILQ_ENTRY(node) nodes;  /* Tail queue. */
+} node_t;
 
-typedef node* list;
+// This typedef creates a head_t that makes it easy for us to pass pointers to
+// head_t without the compiler complaining.
+typedef TAILQ_HEAD(head_s, node) head_t;
 
-void enqueue(list*, tcb*);
-tcb* dequeue(list*);
-void l_insert(list*, tcb*);
-tcb* l_remove(list*);
-tcb* thread_search(my_pthread_t, list * allThreads);
-void initializeList(list*, size_t);
+//Methods
+
+void enqueue(head_t* queue, tcb* thread);
+void insert(head_t* queue, tcb* thread);
+
+tcb* dequeue(head_t* queue);
 
 #endif

@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
+#include <sys/queue.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,6 +25,7 @@
 #define EXIT 3
 #define JOIN 4
 
+#define INTERVAL 10000 // HALF second
 
 typedef struct sigaction mySig;
 
@@ -78,8 +80,9 @@ void my_sleep(unsigned long time);
 // Variables
 
 tcb *currentThread, *prevThread;
-list runningQueue[MAX_SIZE];
-list allThreads[MAX_SIZE];
+head_t runningQueue;
+head_t allThreads;
+head_t tickets;
 ucontext_t cleanup;
 sigset_t signal_set;
 mySig sig;

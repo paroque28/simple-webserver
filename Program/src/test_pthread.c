@@ -43,7 +43,9 @@ void* doSomeThing(void *arg)
     int i = 0;
     while(run){
         test_sleep(3);
-        printf("Hi #%d from thread 0x0%ld.\n", i++, *id);
+        printf("Hi #%d ", i++);
+        printf("from thread ");
+        printf("0x0%ld.\n", *id);
     }
     free(ptr);
 
