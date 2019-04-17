@@ -7,39 +7,46 @@ void scheduler(int signum)
     printf("Operation in Progress!\n");
     return;
   }
-  
+  operationInProgress = 1;
   //Record remaining time
   getitimer(ITIMER_VIRTUAL, &currentTime);
 
   //printf("\n[Thread %ld] Signaled from %ld, time left %i\n", currentThread->tid,currentThread->tid, (int)currentTime.it_value.tv_usec);
 
   //Disable Timer to prevent SIGVALRM
-  timer.it_value.tv_sec = 0;
-  timer.it_value.tv_usec = 0;
-  timer.it_interval.tv_sec = 0;
-  timer.it_interval.tv_usec = 0;
-  setitimer(ITIMER_VIRTUAL, &timer, NULL);
+  // timer.it_value.tv_sec = 0;
+  // timer.it_value.tv_usec = 0;
+  // timer.it_interval.tv_sec = 0;
+  // timer.it_interval.tv_usec = 0;
+  // setitimer(ITIMER_VIRTUAL, &timer, NULL);
 
-  if(signum != SIGVTALRM)
+  if(signum != SIGVTALRM && signum != SIGUSR1)
   {
     printf("[Thread %ld] Signal Received: %d.\nExiting...\n", currentThread->tid, signum);
     exit(signum);
   }
-
+  if(signum == SIGVTALRM){
+    ticks ++;
+    if(ticks == -1){
+      printf("Excided maximum number of ticks!!\n");
+      exit(signum);
+    }
+    //printf("Tick!\n");
+  }
+  //if(signum == SIGUSR1) printf("Scheduler Triggered!\n");
 
   // Time elapsed = difference between max interval size and time remaining in timer
   // if the time splice doesn't deplates the else body goes 
   // the actual amount of time that passed is added to timeelapsed
   int timeSpent = (int)currentTime.it_value.tv_usec;
-  int expectedInterval = INTERVAL;
-  //printf("timeSpent: %i, expectedInterval %i\n", timeSpent, expectedInterval);
-  if(timeSpent < 0 || timeSpent > expectedInterval)
+  //printf("timeSpent: %i\n", timeSpent);
+  if(timeSpent < 0 || timeSpent > TICK)
   {
     timeSpent = 0;
   }
   else
   {
-    timeSpent = expectedInterval - timeSpent;
+    timeSpent = TICK - timeSpent;
   }
 
   
@@ -65,7 +72,7 @@ void scheduler(int signum)
 
       break;
    
-    case YIELD: //YIELD pthread yield was called; don't update priority
+    case YIELD: //YIELD pthread yield was called; 
 
       // Dequeue new thread from runningQueue
       currentThread =dequeue(&runningQueue);
@@ -100,19 +107,10 @@ void scheduler(int signum)
 
       currentThread->status = READY;
 
-      //printf("-Switching to: TID %ld Priority %d\n", currentThread->tid, currentThread->priority);
+      //printf("-Switching to: TID %ld\n", currentThread->tid );
 
-      //reset timer
-      timer.it_value.tv_sec = 0;
-      timer.it_value.tv_usec = INTERVAL * (currentThread->priority + 1);
-      timer.it_interval.tv_sec = 0;
-      timer.it_interval.tv_usec = 0;
-      int ret = setitimer(ITIMER_VIRTUAL, &timer, NULL);
-      if (ret < 0)
-      {
-        printf("Timer Reset Failed. Exiting...\n");
-        exit(0);
-      }
+      reset_timer();
+      operationInProgress = 0;
       setcontext(currentThread->context);
 
       break;
@@ -154,28 +152,17 @@ void scheduler(int signum)
 	
   currentThread->status = READY;
 
-  //reset timer to 25ms times thread priority
-  timer.it_value.tv_sec = 0;
-  timer.it_value.tv_usec = INTERVAL; //* (currentThread->priority + 1) ;
-  timer.it_interval.tv_sec = 0;
-  timer.it_interval.tv_usec = 0;
-  int ret = setitimer(ITIMER_VIRTUAL, &timer, NULL);
-
-  if (ret < 0)
-  {
-     printf("Timer Reset Failure. Exiting...\n");
-     exit(0);
-  }
-
+  reset_timer();
+  operationInProgress= 0;
   
   //Switch to new context
   if(prevThread->tid == currentThread->tid)  
   {
-      //printf("Switching to same thread: TID %ld Priority %d\n", currentThread->tid, currentThread->priority);
+      //printf("Switching to same thread: TID %ld\n", currentThread->tid);
   }
   else
   {
-    //printf("Switching to: TID %ld Priority %d\n", currentThread->tid, currentThread->priority);
+    //printf("Switching to: TID %ld\n", currentThread->tid);
     swapcontext(prevThread->context, currentThread->context);
   }
   //printf("Scheduler Out!\n");
@@ -221,7 +208,7 @@ void garbage_collection()
 
   operationInProgress = 0;
 
-  raise(SIGVTALRM); //TODO: change to sigusr1
+  raise(SIGUSR1);
 }
 
 
@@ -234,7 +221,6 @@ void initializeMainContext()
 
   mainThread->context = mText;
   mainThread->tid = 0;
-  mainThread->priority = 0;
   mainThread->jVal = NULL;
   mainThread->retVal = NULL;
   mainThread->status = READY;
@@ -247,13 +233,15 @@ void initializeMainContext()
 
 
   currentThread = mainThread;
-  printf("Main context initialized!\n");
+  ticks = 0;
 }
 
 void initializeGarbageContext()
 {
   //Set handler of timer
   signal(SIGVTALRM, scheduler);
+  signal(SIGUSR1, scheduler);
+  signal(SIGUSR2, scheduler);
   //set everything to NULL
   initQueue(&allThreads);
   initQueue(&runningQueue);
@@ -293,7 +281,6 @@ int my_pthread_create(my_pthread_t * thread, pthread_attr_t * attr, void *(*func
   tcb *newThread = (tcb*)malloc(sizeof(tcb));
   newThread->context = task;
   newThread->tid = threadCount;
-  newThread->priority = 0;
   newThread->jVal = NULL;
   newThread->retVal = NULL;
   newThread->status = READY;
@@ -317,11 +304,11 @@ int my_pthread_create(my_pthread_t * thread, pthread_attr_t * attr, void *(*func
   {
     //printf("New context: TID %ld\n", newThread->tid);
     initializeMainContext();
-    //raise(SIGVTALRM); //TODO
+    //raise(SIGUSR1); 
   }
   //printf("New thread created: TID %ld\n", newThread->tid);
   
-  raise(SIGVTALRM);// TODO
+  raise(SIGUSR1);
   return 0;
 };
 
@@ -358,7 +345,7 @@ int my_pthread_join(my_pthread_t thread, void **value_ptr)
   currentThread->status = JOIN;
 
   operationInProgress = 0;
-  raise(SIGVTALRM); // TODO
+  raise(SIGUSR1);
 
   if(value_ptr == NULL)
   {return 0;}
@@ -375,4 +362,19 @@ void my_sleep(unsigned long seconds){
         time_t now = time(NULL);
         if(now >= start + 1 * seconds) return;
     }
+}
+
+
+void reset_timer(){
+  timer.it_value.tv_sec = INTERVAL_SEC * QUANTUM;
+  timer.it_value.tv_usec = INTERVAL_MICROSEC * QUANTUM;
+  timer.it_interval.tv_sec = 0;
+  timer.it_interval.tv_usec = 0;
+  int ret = setitimer(ITIMER_VIRTUAL, &timer, NULL);
+
+  if (ret < 0)
+  {
+     printf("Timer Reset Failure. Exiting...\n");
+     exit(0);
+  }
 }

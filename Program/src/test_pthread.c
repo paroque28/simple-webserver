@@ -42,7 +42,7 @@ void* doSomeThing(void *arg)
     void * ptr = malloc(sizeof(int)*100); // Allocate 100 ints
     int i = 0;
     while(run){
-        test_sleep(3);
+        test_sleep(1);
         printf("Hi #%d ", i++);
         printf("from thread ");
         printf("0x0%ld.\n", *id);
@@ -80,7 +80,7 @@ void* doSomeThing(void *arg)
     }
 
 
-    printf("Ending\n");
+    printf("Ending...\n");
     run = 0;
     i = 0;
     //Wait for all threads to exit
@@ -89,7 +89,6 @@ void* doSomeThing(void *arg)
         pthread_join( tid[i] , NULL);
         i++;
     }
-    printf("Threads Joined\n");
 
     return 0;
  }

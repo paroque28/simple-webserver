@@ -25,7 +25,16 @@
 #define EXIT 3
 #define JOIN 4
 
-#define INTERVAL 10000 // HALF second
+//Quantum
+
+#define MICROSEC_PER_MILISEC 1000
+#define MICROSEC_PER_SEC 1000000
+#define INTERVAL_SEC 0
+#define INTERVAL_MILISEC 1
+#define INTERVAL_MICROSEC  INTERVAL_MILISEC * 1000
+#define INTERVAL (INTERVAL_SEC * MICROSEC_PER_SEC) + INTERVAL_MICROSEC // HALF second
+#define TICK INTERVAL
+#define QUANTUM 1
 
 typedef struct sigaction mySig;
 
@@ -61,7 +70,7 @@ int my_pthread_mutex_unlock(my_pthread_mutex_t *mutex);
 /* destroy the mutex */
 int my_pthread_mutex_destroy(my_pthread_mutex_t *mutex);
 
-
+void reset_timer();
 
 // FIX sleep
 void my_sleep(unsigned long time);
@@ -81,7 +90,7 @@ void my_sleep(unsigned long time);
 
 
 // Variables
-
+unsigned long long ticks;
 tcb *currentThread, *prevThread;
 head_t runningQueue;
 head_t allThreads;
