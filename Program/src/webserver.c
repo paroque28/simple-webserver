@@ -172,10 +172,13 @@ void* web(void* input)
 	int fd = ((struct web_args*)input)->fd;
 	int hit = ((struct web_args*)input)->hit;
 	int thread_id = ((struct web_args*)input)->thread_id;
+	printf("fd:%d\n",fd);
 	if(thread_id != -1){
 		log_event(LOG, "Thread created", "" ,thread_id);
 	}
+	#ifndef PREFORK
 	free(input);
+	#endif
 	int j, file_fd, buflen, len;
 	long i, ret;
 	char * fstr;
@@ -183,22 +186,24 @@ void* web(void* input)
 	static 
 	#endif
 	char buffer[BUFSIZE+1];
-
+	printf("fd:%d\n",fd);
 	ret = read(fd,buffer,BUFSIZE); 
+	printf("ssfd:%d\n",fd);
 	if(ret == 0 || ret == -1) {
+		printf("Error reading :%d\n",fd);
 		perror("Error on read request");
 		log_event(SORRY,"failed to read browser request","",fd);
 	}
-
+	printf("*fd:%d\n",fd);
 	if(ret > 0 && ret < BUFSIZE)	
 		buffer[ret]=0;	
 	else buffer[0]=0;
-
+	printf("-fd:%d\n",fd);
 	for(i=0;i<ret;i++)	
 		if(buffer[i] == '\r' || buffer[i] == '\n')
 			buffer[i]='*';
 	log_event(LOG,"request",buffer,hit);
-
+	printf("+fd:%d\n",fd);
 	if( strncmp(buffer,"GET ",4) && strncmp(buffer,"get ",4) )
 		log_event(SORRY,"Only simple GET operation supported",buffer,fd);
 
@@ -250,15 +255,20 @@ void* web(void* input)
 	}
 #endif
 }
+
 #ifdef PREFORK
 void waiting_fork(int *array ,  sem_t *sem, int i, web_args_t* args);
-void working_fork(int *array ,  sem_t *sem, int i, web_args_t* args){
+void working_fork(int *flags ,  sem_t *sem, int i, web_args_t* args){
     sem_wait (sem);           /* P operation */
-    array[i]= 0;              /* increment *p by 0, 1 or 2 based on i */
-    printf ("+Child(%d) is in critical section with PID:(%d)\n", i, array[i]);
+	web_args_t* request_ptr = (args+i);
+	printf("Awoke pid: %d\n",getpid());
+	web_args_t request = *request_ptr;
+	printf("File descriptor : %d, hit %d\n",request.fd, request.hit);
+    flags[i]= 0;              /* increment *p by 0, 1 or 2 based on i */
+    printf ("+Child(%d) is in critical section with PID:(%d)\n", i, flags[i]);
     sem_post (sem);           /* V operation */
-    web((void*)(args+i));
-    waiting_fork(array, sem, i, args);
+    web(&request);
+    waiting_fork(flags, sem, i, args);
 }
 void waiting_fork(int *array ,  sem_t *sem, int i, web_args_t* args){
     sem_wait (sem);           /* P operation */
@@ -276,6 +286,10 @@ void waiting_fork(int *array ,  sem_t *sem, int i, web_args_t* args){
 void intHandler(int a) {
     perror ("SIGINT received");
 	log_event(LOG, "SIGINT received", "" ,a);
+	#if defined(PREFORK)
+	sem_unlink ("pSem");   
+    sem_close(sem);  
+	#endif
 	(void)close(socketfd);
     exit(1);	
 }
@@ -295,6 +309,7 @@ int main(int argc, char **argv)
 	socklen_t socket_length;
 	static struct sockaddr_in cli_addr; 
 	static struct sockaddr_in serv_addr;
+
 	#if defined(PREFORK)
 	//close semaphore if left open
 	sem_unlink ("pSem");   
@@ -331,6 +346,7 @@ int main(int argc, char **argv)
         
     }
 	#endif
+	
 	if(  argc < 1  || (argc == 2 && !strcmp(argv[1], "-h")) || argc > 1) {
 		printf("Use configuration file at /etc/webserver\nOnly Supports:");
 		for(i=0;extensions[i].ext != 0;i++)
@@ -375,6 +391,8 @@ int main(int argc, char **argv)
 		log_file_path = "/var/log/webserver.log";
 	}
 
+	
+
 	//Calls to log messages
 	log_event(LOG, "Directory", directory ,0);
 	log_event(LOG, "Port", port_str ,0);
@@ -409,6 +427,8 @@ int main(int argc, char **argv)
 
 	log_event(LOG,"HTTP server starting",port_str,getpid());
 
+	
+
 	if((listenfd = socket(AF_INET, SOCK_STREAM,0)) <0)
 		log_event(ERROR, "system call","socket",0);
 	if(port < 0 || port >65000)
@@ -439,15 +459,17 @@ int main(int argc, char **argv)
 		request_args->thread_id = -1;
 		signal(SIGPIPE, SIG_IGN);
 		log_event(LOG,"New Request\n","",0);
+		int asda =0;
 #ifdef PREFORK
 		int attended = 0;
 		while(!attended){
 			int f;
 			for(f=0;f<numberOfForks;f++){
-				if (IPCflags[f]!=0 ) {
+				int child_pid = IPCflags[f];
+				if (child_pid!=0 ) {
 					memcpy(IPCwebargs + f, request_args, sizeof(web_args_t)); 
-					printf("Waking up PID %d\n",IPCflags[f]);
-					kill (IPCflags[f], SIGCONT);
+					(void)close(socketfd);
+					kill (child_pid, SIGCONT);
 					attended = 1;
 					break;
 				}
