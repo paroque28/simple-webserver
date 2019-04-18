@@ -302,7 +302,7 @@ int main(int argc, char **argv)
 	key_t key = ftok("shmfile",65); 
 	// shmget returns an identifier in shmid 
     shmid = shmget(key,sizeof(int)*numberOfForks,0666|IPC_CREAT);
-	int *IPCflags = (int*) shmat(shmid,(void*)0,0) 
+	int *IPCflags = (int*) shmat(shmid,(void*)0,0); 
 
 	key_t key_args = ftok("shmfile2",66); 
 	// shmget returns an identifier in shmid 
