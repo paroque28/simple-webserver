@@ -265,7 +265,7 @@ void waiting_fork(int *array ,  sem_t *sem, int i, web_args_t* args){
     array[i]= getpid();              /* increment *p by 0, 1 or 2 based on i */
     printf ("*Child(%d) is in critical section with PID:(%d)\n", i, array[i]);
     sem_post (sem);           /* V operation */
-    printf ("Waiting"); 
+    printf ("Waiting \n"); 
     if (kill (getpid(), SIGSTOP) == -1) {
                     perror ("kill of child failed"); exit (-1);
     }  
@@ -296,12 +296,15 @@ int main(int argc, char **argv)
 	static struct sockaddr_in cli_addr; 
 	static struct sockaddr_in serv_addr;
 	#if defined(PREFORK)
+	//close semaphore if left open
+	sem_unlink ("pSem");   
+    sem_close(sem);  
 	key_t key = ftok("shmfile",65); 
 	// shmget returns an identifier in shmid 
     shmid = shmget(key,sizeof(int)*numberOfForks,0666|IPC_CREAT);
-	int *IPCflags = (int*) shmat(shmid,(void*)0,0); 
+	int *IPCflags = (int*) shmat(shmid,(void*)0,0) 
 
-	key_t key_args = ftok("shmfile2",65); 
+	key_t key_args = ftok("shmfile2",66); 
 	// shmget returns an identifier in shmid 
     shmid_args = shmget(key_args,sizeof(web_args_t)*numberOfForks,0666|IPC_CREAT);
 	web_args_t *IPCwebargs = (web_args_t*) shmat(shmid,(void*)0,0); 
@@ -435,11 +438,10 @@ int main(int argc, char **argv)
 		request_args->hit = hit;
 		request_args->thread_id = -1;
 		signal(SIGPIPE, SIG_IGN);
+		log_event(LOG,"New Request\n","",0);
 #ifdef PREFORK
-		printf("Entered prefork\n");
 		int attended = 0;
 		while(!attended){
-			printf("Checking\n");
 			int f;
 			for(f=0;f<numberOfForks;f++){
 				if (IPCflags[f]!=0 ) {
