@@ -48,6 +48,7 @@ void garbage_collection();
 void initializeMainContext();
 void initializeGarbageContext();
 void getNextThread();
+void my_pthread_setsched(int);
 // DEBUG ----------------
 void my_pthread_print_queues();
 
