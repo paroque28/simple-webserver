@@ -50,12 +50,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SORRY 43
 #define LOG   44
 #define MAX_THREADS 1000
-#define PREFORK //TODO delete
 #if !defined(FORK) && !defined(FIFO) && !defined(THREADED) && !defined(PREFORK)
 #error You must define FORK or FIFO or THREADED before compiling webserver use -D flag on gcc or TYPE= on make
 #endif
 
-#if defined(THREADED) || defined(PRE_THREADED)
+#if defined(THREADED) || defined(PRETHREADED)
 #include <pthread.h>
 #endif
 
@@ -244,14 +243,36 @@ void* web(void* input)
 	exit(1);
 #endif
 	
-#if defined(THREADED) || defined(PRE_THREADED)
+#if defined(THREADED) || defined(PRETHREADED)
 	log_event(LOG, "Exiting thread", "" ,thread_id);
 	if(thread_id != -1){
 		threads_status[thread_id] = 0;
 	}
 #endif
 }
-
+#ifdef PREFORK
+void waiting_fork(int *array ,  sem_t *sem, int i, web_args_t* args);
+void working_fork(int *array ,  sem_t *sem, int i, web_args_t* args){
+    sem_wait (sem);           /* P operation */
+    array[i]= 0;              /* increment *p by 0, 1 or 2 based on i */
+    printf ("+Child(%d) is in critical section with PID:(%d)\n", i, array[i]);
+    sem_post (sem);           /* V operation */
+    web((void*)(args+i));
+    waiting_fork(array, sem, i, args);
+}
+void waiting_fork(int *array ,  sem_t *sem, int i, web_args_t* args){
+    sem_wait (sem);           /* P operation */
+    array[i]= getpid();              /* increment *p by 0, 1 or 2 based on i */
+    printf ("*Child(%d) is in critical section with PID:(%d)\n", i, array[i]);
+    sem_post (sem);           /* V operation */
+    printf ("Waiting"); 
+    if (kill (getpid(), SIGSTOP) == -1) {
+                    perror ("kill of child failed"); exit (-1);
+    }  
+	printf("Awoke pid: %d\n",getpid());
+    working_fork(array, sem, i, args);
+}
+#endif
 void intHandler(int a) {
     perror ("SIGINT received");
 	log_event(LOG, "SIGINT received", "" ,a);
@@ -284,6 +305,28 @@ int main(int argc, char **argv)
 	// shmget returns an identifier in shmid 
     shmid_args = shmget(key_args,sizeof(web_args_t)*numberOfForks,0666|IPC_CREAT);
 	web_args_t *IPCwebargs = (web_args_t*) shmat(shmid,(void*)0,0); 
+	
+	//Semaphore
+	sem = sem_open ("pSem", O_CREAT | O_EXCL, 0644, semaphoreValue); 
+	for (i = 0; i < numberOfForks; i++){
+		//printf("Creating new fork from %d\n",numberOfForks);
+        pid = fork();
+		//printf("PID: %d\n", pid);
+        if (pid < 0) {
+        	/* check for error      */
+            sem_unlink ("pSem");   
+            sem_close(sem);  
+            /* unlink prevents the semaphore existing forever */
+            /* if a crash occurs during the execution         */
+            printf ("Fork error.\n");
+        }
+         else if (pid == 0){
+		 	//printf("Hello from new Fork!\n");
+		 	goto start_child;
+            break;  
+		 }
+        
+    }
 	#endif
 	if(  argc < 1  || (argc == 2 && !strcmp(argv[1], "-h")) || argc > 1) {
 		printf("Use configuration file at /etc/webserver\nOnly Supports:");
@@ -392,6 +435,28 @@ int main(int argc, char **argv)
 		request_args->hit = hit;
 		request_args->thread_id = -1;
 		signal(SIGPIPE, SIG_IGN);
+#ifdef PREFORK
+		printf("Entered prefork\n");
+		int attended = 0;
+		while(!attended){
+			printf("Checking\n");
+			int f;
+			for(f=0;f<numberOfForks;f++){
+				if (IPCflags[f]!=0 ) {
+					memcpy(IPCwebargs + f, request_args, sizeof(web_args_t)); 
+					printf("Waking up PID %d\n",IPCflags[f]);
+					kill (IPCflags[f], SIGCONT);
+					attended = 1;
+					break;
+				}
+			}
+		}
+		//web(request_args);
+		continue;
+start_child:
+		waiting_fork(IPCflags, sem, i, IPCwebargs);
+		exit(0);
+#endif
 // Multiple forks
 #ifdef FORK
 		if((pid = fork()) < 0) {
