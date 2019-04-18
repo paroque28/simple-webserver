@@ -50,7 +50,7 @@ void* doSomeThing(void *arg)
     int err;
     // Error if no number of threads specified
     if (argc != 2) return 1;
-    my_pthread_setsched(LOTTERY);
+    my_pthread_setsched(SELFISH_RR);
     //Initialize mutex
     if (pthread_mutex_init(&mutex1, NULL) != 0)
     {

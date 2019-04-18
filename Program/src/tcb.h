@@ -40,6 +40,7 @@ typedef struct threadControlBlock
   my_pthread_t tid;
 
   unsigned int tickets;
+  unsigned long selfishScore;
   //Real-Time
   unsigned long quantumsRun;
   unsigned long lastRun;

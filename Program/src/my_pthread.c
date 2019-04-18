@@ -7,16 +7,13 @@ void getNextThread(){
     currentThread = dequeue(&runningQueue);
   }
   else if(schedulingAlgorithm == SELFISH_RR){
-    printf("Scheduling alghrithm SELFISH_RR no implemented!\n");
-    exit(1);
+    currentThread = selfishRRgetNextThread(&runningQueue, &newQueue);
   }
   else if(schedulingAlgorithm == LOTTERY){
     currentThread = lotterygetNextThread(&runningQueue);
-    //my_pthread_print_queues();
   }
   else if(schedulingAlgorithm == RT_EDF){
-    printf("Scheduling alghrithm RT_EDF no implemented!\n");
-    exit(1);
+    currentThread = EDFgetNextThread(&runningQueue);
   }
   else{
     printf("No scheduling alghrithm selected!\n");
@@ -48,6 +45,7 @@ void scheduler(int signum)
       printf("Excided maximum number of ticks!!\n");
       exit(signum);
     }
+    selfishUpdateScores(&runningQueue, &newQueue);
     //printf("Tick!\n");
   }
   // /if(signum == SIGUSR2) printf("Scheduler Triggered from Mutex!\n");
@@ -81,7 +79,6 @@ void scheduler(int signum)
       //put back the thread that just finished back into the running queue
       enqueue(&runningQueue, currentThread);
       getNextThread();
-
 
       break;
    
@@ -133,10 +130,15 @@ void scheduler(int signum)
       //we just go straight to getting another thread
       getNextThread();
 
-      if(currentThread == NULL)
+      if(currentThread == NULL && schedulingAlgorithm != SELFISH_RR)
       {
         printf("Error currentThread is NULL");
 	      exit(EXIT_FAILURE);
+      }
+      //Selfish RR to prevent this error enquue the main thread again
+      else{
+        currentThread = prevThread;
+        enqueue(&runningQueue, currentThread);
       }
       
       break;
@@ -243,6 +245,7 @@ void initializeMainContext()
   mainThread->retVal = NULL;
   mainThread->status = READY;
   mainThread->tickets = 2;
+  mainThread->selfishScore = 0;
   mainThread->joinQueue = malloc(sizeof(head_t*));
   initQueue(mainThread->joinQueue);
 
@@ -264,6 +267,7 @@ void initializeGarbageContext()
   //set everything to NULL
   initQueue(&allThreads);
   initQueue(&runningQueue);
+  initQueue(&newQueue);
     
   //Initialize garbage collector
   getcontext(&cleanup);
@@ -304,6 +308,7 @@ int my_pthread_create(my_pthread_t * thread, my_pthread_attr_t * attr, void *(*f
   newThread->retVal = NULL;
   newThread->status = READY;
   newThread->tickets = 0;
+  newThread->selfishScore = 0;
   newThread->joinQueue = malloc(sizeof(head_t*));
   initQueue(newThread->joinQueue);
 
@@ -312,7 +317,12 @@ int my_pthread_create(my_pthread_t * thread, my_pthread_attr_t * attr, void *(*f
   printf("Thread created: TID %ld with %d ticket(s)\n", newThread->tid,newThread->tickets + 1);
 
   //Enqueue newThread in running
-  enqueue(&runningQueue, newThread);
+  if(schedulingAlgorithm == SELFISH_RR){
+    enqueue(&newQueue, newThread);
+  }
+  else{
+    enqueue(&runningQueue, newThread);
+  }
 
   // Insert newThread in allThreads
   insert(&allThreads, newThread);

@@ -19,6 +19,8 @@
 #include "tcb.h"
 #include "list.h"
 #include "lottery.h"
+#include "selfishrr.h"
+#include "edf.h"
 
 #define READY 0
 #define YIELD 1
@@ -100,6 +102,7 @@ void my_sleep(unsigned long time);
 unsigned long long ticks;
 tcb *currentThread, *prevThread;
 head_t runningQueue;
+head_t newQueue; // SelfishRR
 head_t allThreads;
 head_t tickets;
 ucontext_t cleanup;
