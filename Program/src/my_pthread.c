@@ -1,6 +1,6 @@
 #include "my_pthread.h"
 
-void getNextCurrentThread(){
+void getNextThread(){
   if(schedulingAlgorithm == RR){
     // Dequeue new thread from runningQueue
     currentThread = dequeue(&runningQueue);
@@ -79,13 +79,13 @@ void scheduler(int signum)
 
       //put back the thread that just finished back into the running queue
       enqueue(&runningQueue, currentThread);
-      getNextCurrentThread();
+      getNextThread();
 
 
       break;
    
     case YIELD: //YIELD pthread yield was called; 
-      getNextCurrentThread();
+      getNextThread();
 
       //IF then later consider enqueuing it to the waiting queue instead
       if(currentThread != NULL){
@@ -102,7 +102,7 @@ void scheduler(int signum)
     case EXIT:
 
       currentThread = NULL;
-      getNextCurrentThread();
+      getNextThread();
       
 
       if(currentThread == NULL)
@@ -130,7 +130,7 @@ void scheduler(int signum)
       currentThread = NULL;
       //notice how we don't enqueue the thread that just finished back into the running queue
       //we just go straight to getting another thread
-      getNextCurrentThread();
+      getNextThread();
 
       if(currentThread == NULL)
       {
@@ -144,7 +144,7 @@ void scheduler(int signum)
       //printf("Status Mutex wait current: %ld\n", currentThread->tid);
       //my_pthread_print_queues();
       //Don't add current to queue: already in mutex queue
-      getNextCurrentThread();
+      getNextThread();
 
 
       if(currentThread == NULL)

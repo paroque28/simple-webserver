@@ -47,7 +47,7 @@ typedef struct sigaction mySig;
 void garbage_collection();
 void initializeMainContext();
 void initializeGarbageContext();
-
+void getNextThread();
 // DEBUG ----------------
 void my_pthread_print_queues();
 
