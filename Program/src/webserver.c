@@ -42,20 +42,28 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <semaphore.h>
+#include <sys/shm.h>
 
 #define BUFSIZE 8096
 #define ERROR 42
 #define SORRY 43
 #define LOG   44
 #define MAX_THREADS 1000
-
-#if !defined(FORK) && !defined(FIFO) && !defined(THREADED)
+#define PREFORK //TODO delete
+#if !defined(FORK) && !defined(FIFO) && !defined(THREADED) && !defined(PREFORK)
 #error You must define FORK or FIFO or THREADED before compiling webserver use -D flag on gcc or TYPE= on make
 #endif
 
 #if defined(THREADED) || defined(PRE_THREADED)
 #include <pthread.h>
 #endif
+
+typedef struct web_args {
+    int fd;
+    int hit;
+	int thread_id;  //or fork
+} web_args_t;
 
 struct {
 	char *ext;
@@ -92,7 +100,13 @@ char * directory = NULL;
 char * log_file_path = NULL;
 char * port_str = NULL;
 int socketfd;
-
+#if defined(PREFORK) || defined(PRETHREADED)
+sem_t *sem;
+int shmid; 
+int shmid_args; 
+unsigned int numberOfForks=4; 
+unsigned int semaphoreValue=1;
+#endif
 #if defined(THREADED) || defined(PRETHREADED)
 pthread_t threads[MAX_THREADS];
 char threads_status[MAX_THREADS] = { 0 };
@@ -152,12 +166,6 @@ void log_event(int type, char *s1, char *s2, int num)
 	
 	
 }
-
-struct web_args {
-    int fd;
-    int hit;
-	int thread_id;  //or fork
-};
 
 //This function is used to control browser requests
 void* web(void* input)
@@ -266,7 +274,17 @@ int main(int argc, char **argv)
 	socklen_t socket_length;
 	static struct sockaddr_in cli_addr; 
 	static struct sockaddr_in serv_addr;
+	#if defined(PREFORK)
+	key_t key = ftok("shmfile",65); 
+	// shmget returns an identifier in shmid 
+    shmid = shmget(key,sizeof(int)*numberOfForks,0666|IPC_CREAT);
+	int *IPCflags = (int*) shmat(shmid,(void*)0,0); 
 
+	key_t key_args = ftok("shmfile2",65); 
+	// shmget returns an identifier in shmid 
+    shmid_args = shmget(key_args,sizeof(web_args_t)*numberOfForks,0666|IPC_CREAT);
+	web_args_t *IPCwebargs = (web_args_t*) shmat(shmid,(void*)0,0); 
+	#endif
 	if(  argc < 1  || (argc == 2 && !strcmp(argv[1], "-h")) || argc > 1) {
 		printf("Use configuration file at /etc/webserver\nOnly Supports:");
 		for(i=0;extensions[i].ext != 0;i++)
