@@ -32,7 +32,7 @@ int my_pthread_mutex_lock(my_pthread_mutex_t *mutex)
 
   if(!mutex->initialized)
   {return -1;}
-  printf("Lock status: %d\n",mutex->locked);
+  //printf("Lock status: %d\n",mutex->locked);
   while(__atomic_test_and_set((volatile void *)&mutex->locked,__ATOMIC_RELAXED))
   {
     //printf("Mutex is locked!\n");

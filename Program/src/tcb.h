@@ -38,6 +38,8 @@ typedef struct my_pthread_mutex_t
 typedef struct threadControlBlock
 {
   my_pthread_t tid;
+
+  unsigned int tickets;
   //Real-Time
   unsigned long quantumsRun;
   unsigned long lastRun;

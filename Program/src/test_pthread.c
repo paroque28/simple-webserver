@@ -18,38 +18,25 @@ pthread_mutex_t mutex1;
 pthread_t tid[2000];
 int run = 1;
 
-//Print Pointed Identifier
-void printPt(pthread_t pt) {
-    unsigned char *ptc = (unsigned char*)(void*)(&pt);
-    printf("Pthread: ");
-    printf("0x");
-    for (size_t i=0; i<sizeof(pt); i++) {
-        printf( "%02x", (unsigned)(ptc[i]));
-    }
-    printf("\n");
-}
-
-//THreads routine
+//Threads routine
 void* doSomeThing(void *arg)
 {
     pthread_t* id = ((pthread_t*) arg);
-    printf("Mutexlock from thread %ld\n",*id);
     pthread_mutex_lock( &mutex1 );
-    printPt(*id);
+    printf("Pthread: %ld\n", *id);
     pthread_mutex_unlock( &mutex1 );
-    printf("Mutex unlock from thread %ld\n",*id);
 
     void * ptr = malloc(sizeof(int)*100); // Allocate 100 ints
     int i = 0;
     while(run){
+        test_sleep(1);
         //printf("Mutexlock from thread %ld\n",*id);
-        pthread_mutex_lock( &mutex1 );
-        test_sleep(1);     
+        pthread_mutex_lock( &mutex1 );    
         printf("Hi #%d ", i++);
         printf("from thread ");
-        printf("0x0%ld.\n", *id);
+        printf("%ld.\n", *id);
         pthread_mutex_unlock( &mutex1 );  
-        printf("Mutex unlock from thread %ld\n",*id);
+        //printf("Mutex unlock from thread %ld\n",*id);
     }
     free(ptr);
 
@@ -74,7 +61,7 @@ void* doSomeThing(void *arg)
     while(i < atoi(argv[1]))
     {
         pthread_t* number = malloc(sizeof (pthread_t));
-        *number = (pthread_t) i;
+        *number = (pthread_t) i + 1;
         err = pthread_create(&(tid[i]), NULL, &doSomeThing, (void *)number);
         if (err != 0)
             printf("\ncan't create thread :[%s]", strerror(err));

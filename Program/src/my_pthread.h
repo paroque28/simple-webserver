@@ -25,6 +25,11 @@
 #define EXIT 3
 #define JOIN 4
 
+#define RR 0
+#define SELFISH_RR 1
+#define LOTTERY 2
+#define RT_EDF 3
+
 //Quantum
 
 #define MICROSEC_PER_MILISEC 1000
@@ -105,5 +110,7 @@ int mainContextInitialized;
 int timeElapsed;
 int threadCount;
 int operationInProgress;
+
+int schedulingAlgorithm;
 
 #endif

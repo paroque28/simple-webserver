@@ -1,5 +1,28 @@
 #include "my_pthread.h"
 
+void getNextCurrentThread(){
+  if(schedulingAlgorithm == RR){
+    // Dequeue new thread from runningQueue
+    currentThread = dequeue(&runningQueue);
+  }
+  else if(schedulingAlgorithm == SELFISH_RR){
+    printf("Scheduling alghrithm no implemented!\n");
+    exit(1);
+  }
+  else if(schedulingAlgorithm == LOTTERY){
+    printf("Scheduling alghrithm no implemented!\n");
+    exit(1);
+  }
+  else if(schedulingAlgorithm == RT_EDF){
+    printf("Scheduling alghrithm no implemented!\n");
+    exit(1);
+  }
+  else{
+    printf("No scheduling alghrithm selected!\n");
+    exit(1);
+  }
+}
+
 void scheduler(int signum)
 {
   if(operationInProgress)
@@ -12,14 +35,7 @@ void scheduler(int signum)
   getitimer(ITIMER_VIRTUAL, &currentTime);
 
   //printf("\n[Thread %ld] Signaled from %ld, time left %i\n", currentThread->tid,currentThread->tid, (int)currentTime.it_value.tv_usec);
-
-  //Disable Timer to prevent SIGVALRM
-  // timer.it_value.tv_sec = 0;
-  // timer.it_value.tv_usec = 0;
-  // timer.it_interval.tv_sec = 0;
-  // timer.it_interval.tv_usec = 0;
-  // setitimer(ITIMER_VIRTUAL, &timer, NULL);
-
+  
   if(signum != SIGVTALRM && signum != SIGUSR1 && signum != SIGUSR2)
   {
     printf("[Thread %ld] Signal Received: %d.\nExiting...\n", currentThread->tid, signum);
@@ -54,10 +70,6 @@ void scheduler(int signum)
 
   //printf("[Thread %ld] Total time: %d from time remaining: %d out of %d\n", currentThread->tid, timeElapsed, (int)currentTime.it_value.tv_usec, INTERVAL);
 
-  if(currentThread->tid >= 100){
-    printf("wtf\n");
-      my_pthread_print_queues();
-  } 
   prevThread = currentThread;
 
   int i;
@@ -66,19 +78,14 @@ void scheduler(int signum)
     case READY: //READY current thread is in the running queue
 
       //put back the thread that just finished back into the running queue
-
-      //if(scheduler == fifo){}
-      // enqueue currentThread into running queue
       enqueue(&runningQueue, currentThread);
-      // Dequeue new thread from runningQueue
-      currentThread =  dequeue(&runningQueue);
+      getNextCurrentThread();
+
 
       break;
    
     case YIELD: //YIELD pthread yield was called; 
-
-      // Dequeue new thread from runningQueue
-      currentThread =dequeue(&runningQueue);
+      getNextCurrentThread();
 
       //IF then later consider enqueuing it to the waiting queue instead
       if(currentThread != NULL){
@@ -95,7 +102,7 @@ void scheduler(int signum)
     case EXIT:
 
       currentThread = NULL;
-      currentThread = dequeue(&runningQueue);
+      getNextCurrentThread();
       
 
       if(currentThread == NULL)
@@ -123,7 +130,7 @@ void scheduler(int signum)
       currentThread = NULL;
       //notice how we don't enqueue the thread that just finished back into the running queue
       //we just go straight to getting another thread
-      currentThread = dequeue(&runningQueue);
+      getNextCurrentThread();
 
       if(currentThread == NULL)
       {
@@ -137,7 +144,7 @@ void scheduler(int signum)
       //printf("Status Mutex wait current: %ld\n", currentThread->tid);
       //my_pthread_print_queues();
       //Don't add current to queue: already in mutex queue
-      currentThread = dequeue(&runningQueue);
+      getNextCurrentThread();
 
 
       if(currentThread == NULL)
@@ -223,6 +230,7 @@ void garbage_collection()
 
 void initializeMainContext()
 {
+  schedulingAlgorithm = RR;
   tcb *mainThread = (tcb*)malloc(sizeof(tcb));
   ucontext_t *mText = (ucontext_t*)malloc(sizeof(ucontext_t));
   getcontext(mText);
@@ -233,6 +241,7 @@ void initializeMainContext()
   mainThread->jVal = NULL;
   mainThread->retVal = NULL;
   mainThread->status = READY;
+  mainThread->tickets = 2;
   mainThread->joinQueue = malloc(sizeof(head_t*));
   initQueue(mainThread->joinQueue);
 
@@ -293,12 +302,13 @@ int my_pthread_create(my_pthread_t * thread, my_pthread_attr_t * attr, void *(*f
   newThread->jVal = NULL;
   newThread->retVal = NULL;
   newThread->status = READY;
+  newThread->tickets = 0;
   newThread->joinQueue = malloc(sizeof(head_t*));
   initQueue(newThread->joinQueue);
 
   *thread = threadCount;
   threadCount++;
-  //printf("Thread created: TID %ld\n", newThread->tid);
+  printf("Thread created: TID %ld with %d ticket(s)\n", newThread->tid,newThread->tickets + 1);
 
   //Enqueue newThread in running
   enqueue(&runningQueue, newThread);
