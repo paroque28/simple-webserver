@@ -1,9 +1,7 @@
 #include "my_pthread.h"
 
-schedulingAlgorithm = RR;
-
 void getNextThread(){
-  printf("Algorithm: %d\n",schedulingAlgorithm);
+  //printf("Algorithm: %d\n",schedulingAlgorithm);
   if(schedulingAlgorithm == RR){
     // Dequeue new thread from runningQueue
     currentThread = dequeue(&runningQueue);
@@ -13,8 +11,8 @@ void getNextThread(){
     exit(1);
   }
   else if(schedulingAlgorithm == LOTTERY){
-    printf("Scheduling alghrithm LOTTERY no implemented!\n");
-    exit(1);
+    currentThread = lotterygetNextThread(&runningQueue);
+    //my_pthread_print_queues();
   }
   else if(schedulingAlgorithm == RT_EDF){
     printf("Scheduling alghrithm RT_EDF no implemented!\n");
@@ -233,6 +231,7 @@ void garbage_collection()
 
 void initializeMainContext()
 {
+  schedulingAlgorithm = RR;
   tcb *mainThread = (tcb*)malloc(sizeof(tcb));
   ucontext_t *mText = (ucontext_t*)malloc(sizeof(ucontext_t));
   getcontext(mText);
@@ -377,7 +376,13 @@ int my_pthread_join(my_pthread_t thread, void **value_ptr)
 };
 
 void my_pthread_setsched(int newSchedulingAlgorithm){
+  if(!mainContextInitialized)
+  {
+    initializeGarbageContext();
+    initializeMainContext();
+  }
   schedulingAlgorithm = newSchedulingAlgorithm;
+  srand(time(0)); 
 }
 
 //Busy waiting

@@ -18,6 +18,7 @@
 #include <time.h>
 #include "tcb.h"
 #include "list.h"
+#include "lottery.h"
 
 #define READY 0
 #define YIELD 1
