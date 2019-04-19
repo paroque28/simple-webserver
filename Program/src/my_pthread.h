@@ -1,5 +1,5 @@
-#ifndef MY_PTHREAD_H
-#define MY_PTHREAD_H
+#ifndef MY_PTHREAD
+#define MY_PTHREAD
 
 
 /* include lib header files that you need here: */
@@ -22,12 +22,16 @@
 #include "selfishrr.h"
 #include "edf.h"
 
+//Status
 #define READY 0
 #define YIELD 1
 #define WAIT 2
 #define EXIT 3
 #define JOIN 4
+#define MUTEX_WAIT 5
 
+
+//Scheduling codes
 #define RR 0
 #define SELFISH_RR 1
 #define LOTTERY 2
@@ -50,14 +54,23 @@ typedef struct sigaction mySig;
 void garbage_collection();
 void initializeMainContext();
 void initializeGarbageContext();
+
+// SCHEDULING
+void scheduler(int signum);
 void getNextThread();
 void my_pthread_setsched(int);
+
 // DEBUG ----------------
 void my_pthread_print_queues();
 
 
 // THREAD ----------------
 int my_pthread_create(my_pthread_t * thread, pthread_attr_t * attr, void *(*function)(void*), void * arg);
+// Initialize pthread attr
+int my_pthread_attr_init (my_pthread_attr_t* attr);
+// Set Lottery tickets
+int my_pthread_attr_set_tickets(my_pthread_attr_t* attr, unsigned int tickets);
+int my_pthread_attr_set_rt_params(my_pthread_attr_t* attr, unsigned int period, unsigned int duration);
 /* give CPU pocession to other user level threads voluntarily */
 int my_pthread_yield();
 /* terminate a thread */
@@ -86,8 +99,8 @@ void my_sleep(unsigned long time);
 
 
 
-#define pthread_mutex_t my_pthread_mutex_t
 #define pthread_create(thread, attr, function, arg) my_pthread_create(thread, attr, function, arg)
+#define pthread_attr_init(attr) my_pthread_attr_init(attr)
 #define pthread_yield() my_pthread_yield()
 #define pthread_exit(value_ptr) my_pthread_exit(value_ptr)
 #define pthread_join(thread, value_ptr) my_pthread_join(thread, value_ptr)

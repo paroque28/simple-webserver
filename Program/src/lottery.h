@@ -1,5 +1,7 @@
 #ifndef LOTTERY_H
-#define LOTTRY_H
+#define LOTTERY_H
+
+#define DEFAULT_TICKETS 0
 
 #include <sys/queue.h>
 #include "tcb.h"

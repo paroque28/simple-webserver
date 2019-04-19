@@ -2,10 +2,14 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
-//#include <pthread.h>
 #include "my_pthread.h"
 #include <stdlib.h>
 #include <signal.h>
+#ifndef MY_PTHREAD
+#include <pthread.h>
+#endif
+
+
 
 void test_sleep(unsigned long seconds){
     time_t start = time(NULL);
@@ -51,7 +55,7 @@ void* doSomeThing(void *arg)
     int err;
     // Error if no number of threads specified
     if (argc != 2) return 1;
-    my_pthread_setsched(SELFISH_RR);
+    my_pthread_setsched(LOTTERY);
     //Initialize mutex
     if (pthread_mutex_init(&mutex1, NULL) != 0)
     {
@@ -63,7 +67,13 @@ void* doSomeThing(void *arg)
     {
         pthread_t* number = malloc(sizeof (pthread_t));
         *number = (pthread_t) i + 1;
-        err = pthread_create(&(tid[i]), NULL, &doSomeThing, (void *)number);
+        pthread_attr_t thread_attr ;
+        pthread_attr_init(&thread_attr);
+        #ifdef MY_PTHREAD
+        my_pthread_attr_set_tickets(&thread_attr,i+1);
+        my_pthread_attr_set_rt_params(&thread_attr, 5, 2);
+        #endif
+        err = pthread_create(&(tid[i]), &thread_attr, &doSomeThing, (void *)number);
         if (err != 0)
             printf("\ncan't create thread :[%s]", strerror(err));
 

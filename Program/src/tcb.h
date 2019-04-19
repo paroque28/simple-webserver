@@ -5,26 +5,39 @@
 #include <sys/queue.h>
 #include "list.h"
 
+//List typedef circular dependency
 typedef struct head_s head_t;
+
 // Initialization
 struct threadControlBlock;
 typedef struct threadControlBlock tcb;
 
-
+// My pthread structs
 typedef unsigned long int my_pthread_t;
-typedef void my_pthread_attr_t;
 typedef void my_pthread_mutexattr_t;
 
+//pthread interface
 #define pthread_t my_pthread_t
 #define pthread_attr_t my_pthread_attr_t
+#define pthread_mutex_t my_pthread_mutex_t
+
 //context
 #define STACK_S 8192
-
-#define MUTEX_WAIT 5
 #define MAX_SIZE 200
 
+// Pthread attr definition
+typedef struct my_pthread_attr
+{ 
+  // Lottery
+  unsigned int tickets;
 
-/* mutex struct definition */
+  //Real-Time
+  unsigned int period; //Number of quantums between execution
+  unsigned int duration; // Number of quantums per frame
+  
+} my_pthread_attr_t;
+
+// mutex struct definition 
 typedef struct my_pthread_mutex_t
 {
   int locked;
@@ -39,11 +52,15 @@ typedef struct threadControlBlock
 {
   my_pthread_t tid;
 
+  // Lottery
   unsigned int tickets;
+  
+  //SelfishRR
   unsigned long selfishScore;
+
   //Real-Time
   unsigned long quantumsRun;
-  unsigned long lastRun;
+  unsigned long long lastRun;
   unsigned int period; //Number of quantums between execution
   unsigned int duration; // Number of quantums per frame
 
