@@ -43,7 +43,7 @@ void selfishUpdateScores(head_t* runningQueue, head_t* newQueue){
             TAILQ_REMOVE(newQueue, i, nodes);
             free(i);
             enqueue(runningQueue,promoted);
-            printf("Thread: %ld promoted!\n", promoted->tid);
+            //printf("Thread: %ld promoted!\n", promoted->tid);
         }
     }
 

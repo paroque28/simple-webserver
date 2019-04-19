@@ -42,7 +42,7 @@ void scheduler(int signum)
   if(signum == SIGVTALRM){
     ticks ++;
     if(ticks == -1){
-      printf("Excided maximum number of ticks!!\n");
+      printf("Excided maximum number of ticks!!\n We didn't expect to see you +500 years in the future\n");
       exit(signum);
     }
     selfishUpdateScores(&runningQueue, &newQueue);
@@ -205,7 +205,7 @@ void garbage_collection()
   {
     jThread = dequeue(currentThread->joinQueue);
 
-    printf("Join queue of: %ld join: %ld\n", currentThread->tid, jThread->tid);
+    //printf("Join queue of: %ld join: %ld\n", currentThread->tid, jThread->tid);
     jThread->retVal = currentThread->jVal;
 
     insert(&runningQueue, jThread);
@@ -371,7 +371,6 @@ int my_pthread_join(my_pthread_t thread, void **value_ptr)
       break;
     }
   }
-  printf("Join thread %ld\n", tgt->tid);
   // if didn't find the thread
   if(tgt == NULL)   return -1;
 

@@ -28,11 +28,22 @@ int my_pthread_mutex_lock(my_pthread_mutex_t *mutex)
     initializeGarbageContext();
     initializeMainContext();
   }
-  operationInProgress = 1;
-
   if(!mutex->initialized)
   {return -1;}
+
+  unsigned long long now = ticks;
+  //printf("now: %lld\n",now);
+  while(ticks < now + 2){
+    //printf("ticks: %lld\n",ticks);
+    //printf("%d\n",ticks < now + 2);
+    //my_sleep(1);
+  }
+  //printf("FInally\n");
+  operationInProgress = 1;
+
+  
   //printf("Lock status: %d\n",mutex->locked);
+
   while(__atomic_test_and_set((volatile void *)&mutex->locked,__ATOMIC_RELAXED))
   {
     //printf("Mutex is locked!\n");
