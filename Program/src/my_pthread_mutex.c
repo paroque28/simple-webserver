@@ -35,7 +35,7 @@ int my_pthread_mutex_lock(my_pthread_mutex_t *mutex)
   //printf("Lock status: %d\n",mutex->locked);
   while(__atomic_test_and_set((volatile void *)&mutex->locked,__ATOMIC_RELAXED))
   {
-    printf("Mutex is locked!\n");
+    //printf("Mutex is locked!\n");
     operationInProgress = 1;
     enqueue(mutex->queue, currentThread);
     currentThread->status = MUTEX_WAIT;

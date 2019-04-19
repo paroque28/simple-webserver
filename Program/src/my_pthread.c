@@ -124,7 +124,6 @@ void scheduler(int signum)
       break;
 
     case JOIN: //JOIN pthread_join
-      printf("%s %s:%d\n", __func__, __FILE__, __LINE__);
       currentThread = NULL;
       //notice how we don't enqueue the thread that just finished back into the running queue
       //we just go straight to getting another thread
@@ -136,10 +135,10 @@ void scheduler(int signum)
 	      exit(EXIT_FAILURE);
       }
       //Selfish RR to prevent this error enquue the main thread again
-      else if(schedulingAlgorithm != SELFISH_RR){
-        currentThread = prevThread;
-        enqueue(&runningQueue, currentThread);
-      }
+      // else if(schedulingAlgorithm == SELFISH_RR){
+      //   currentThread = prevThread;
+      //   enqueue(&runningQueue, currentThread);
+      // }
       
       break;
       
@@ -192,7 +191,7 @@ void scheduler(int signum)
 
 void garbage_collection()
 {
-  printf("Garbage collection!\n");
+  //printf("Garbage collection!\n");
   operationInProgress = 1;
   currentThread->status = EXIT;
   
@@ -373,7 +372,6 @@ int my_pthread_join(my_pthread_t thread, void **value_ptr)
     }
   }
   printf("Join thread %ld\n", tgt->tid);
-  printf("%s %s:%d\n", __func__, __FILE__, __LINE__);
   // if didn't find the thread
   if(tgt == NULL)   return -1;
 
@@ -384,15 +382,12 @@ int my_pthread_join(my_pthread_t thread, void **value_ptr)
 
   operationInProgress = 0;
   raise(SIGUSR1);
-  printf("%s %s:%d\n", __func__, __FILE__, __LINE__);
   if(value_ptr == NULL)
   {
-    printf("%s %s:%d\n", __func__, __FILE__, __LINE__);
     return 0;
   }
 
   *value_ptr = currentThread->retVal;
-  printf("%s %s:%d\n", __func__, __FILE__, __LINE__);
   return 0;
 };
 
