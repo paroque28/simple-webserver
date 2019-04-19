@@ -112,7 +112,7 @@ void my_sleep(unsigned long time);
 
 
 // Variables
-unsigned long long ticks;
+long long ticks;
 tcb *currentThread, *prevThread;
 head_t runningQueue;
 head_t newQueue; // SelfishRR

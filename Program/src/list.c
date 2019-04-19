@@ -24,6 +24,21 @@ tcb* dequeue(head_t* queue){
   return thread;
 }
 
+int removeFromQueue(head_t* queue, tcb* thread){
+  struct node * e = NULL;
+  int res = 1;
+  TAILQ_FOREACH(e, queue, nodes)
+  {
+      if(e->thread == thread){
+        TAILQ_REMOVE(queue, e, nodes);
+        free(e);
+        res = 0;
+        break;
+      }
+  }
+  return res;
+}
+
 
 void printQueue(head_t* queue){
 

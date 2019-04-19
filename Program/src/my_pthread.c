@@ -28,11 +28,12 @@ void garbage_collection()
     {
       //Delete currentThread from allThreads
       if(i->thread->tid == currentThread->tid){
+        TAILQ_REMOVE(&allThreads, i, nodes);
+        free(i);
         break;
       }
     }
-    TAILQ_REMOVE(&allThreads, i, nodes);
-    free(i);
+    
     free(currentThread->joinQueue); //double check
 
   operationInProgress = 0;
@@ -61,6 +62,8 @@ void initializeMainContext()
   mainThread->tickets = 2;
   mainThread->duration = 4;
   mainThread->period = 100;
+  mainThread->quantumsRun = 0;
+  mainThread->lastRun = 0;
 
   mainContextInitialized = 1;
 
@@ -121,6 +124,8 @@ int my_pthread_create(my_pthread_t * thread, my_pthread_attr_t * attr, void *(*f
   newThread->retVal = NULL;
   newThread->status = READY;
   newThread->selfishScore = 0;
+  newThread->quantumsRun = 0;
+  newThread->lastRun = 0;
   newThread->joinQueue = malloc(sizeof(head_t*));
   initQueue(newThread->joinQueue);
   if (attr == NULL){

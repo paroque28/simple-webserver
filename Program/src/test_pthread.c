@@ -32,16 +32,16 @@ void* doSomeThing(void *arg)
 
     void * ptr = malloc(sizeof(int)*100); // Allocate 100 ints
     int i = 0;
-    while(i!=3){
-        
+    while(run){
+        test_sleep(1);
         //printf("Mutexlock from thread %ld\n",*id);
         pthread_mutex_lock( &mutex1 );    
-        test_sleep(1);
         printf("Hi #%d ", i++);
         printf("from thread ");
         printf("%ld.\n", *id);
         pthread_mutex_unlock( &mutex1 );  
         //printf("Mutex unlock from thread %ld\n",*id);
+        test_sleep(1);
     }
     free(ptr);
 
@@ -55,7 +55,7 @@ void* doSomeThing(void *arg)
     int err;
     // Error if no number of threads specified
     if (argc != 2) return 1;
-    my_pthread_setsched(LOTTERY);
+    my_pthread_setsched(RT_EDF);
     //Initialize mutex
     if (pthread_mutex_init(&mutex1, NULL) != 0)
     {
@@ -71,7 +71,7 @@ void* doSomeThing(void *arg)
         pthread_attr_init(&thread_attr);
         #ifdef MY_PTHREAD
         my_pthread_attr_set_tickets(&thread_attr,i+1);
-        my_pthread_attr_set_rt_params(&thread_attr, 5, 2);
+        my_pthread_attr_set_rt_params(&thread_attr, 6, 2);
         #endif
         err = pthread_create(&(tid[i]), &thread_attr, &doSomeThing, (void *)number);
         if (err != 0)

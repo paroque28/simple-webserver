@@ -14,7 +14,7 @@ void getNextThread(){
     currentThread = lotterygetNextThread(&runningQueue);
   }
   else if(schedulingAlgorithm == RT_EDF){
-    currentThread = EDFgetNextThread(&runningQueue);
+    currentThread = EDFgetNextThread(&runningQueue, ticks, currentThread);
   }
   else{
     printf("No scheduling alghrithm selected!\n");
@@ -42,11 +42,14 @@ void scheduler(int signum)
   }
   if(signum == SIGVTALRM){
     ticks ++;
-    if(ticks == -1){
+    if(ticks == __LONG_LONG_MAX__){
       printf("Excided maximum number of ticks!!\n We didn't expect to see you +500 years in the future\n");
       exit(signum);
     }
-    selfishUpdateScores(&runningQueue, &newQueue);
+    if(schedulingAlgorithm == SELFISH_RR){
+      selfishUpdateScores(&runningQueue, &newQueue);
+    }
+    if(currentThread != NULL)currentThread->quantumsRun++;
     //printf("Tick!\n");
   }
   // /if(signum == SIGUSR2) printf("Scheduler Triggered from Mutex!\n");
