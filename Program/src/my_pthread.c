@@ -25,7 +25,7 @@ void scheduler(int signum)
 {
   if(operationInProgress)
   {
-    printf("Operation in Progress!\n");
+    //printf("Operation in Progress!\n");
     return;
   }
   operationInProgress = 1;
@@ -124,7 +124,7 @@ void scheduler(int signum)
       break;
 
     case JOIN: //JOIN pthread_join
-
+      printf("%s %s:%d\n", __func__, __FILE__, __LINE__);
       currentThread = NULL;
       //notice how we don't enqueue the thread that just finished back into the running queue
       //we just go straight to getting another thread
@@ -136,7 +136,7 @@ void scheduler(int signum)
 	      exit(EXIT_FAILURE);
       }
       //Selfish RR to prevent this error enquue the main thread again
-      else{
+      else if(schedulingAlgorithm != SELFISH_RR){
         currentThread = prevThread;
         enqueue(&runningQueue, currentThread);
       }
@@ -192,7 +192,7 @@ void scheduler(int signum)
 
 void garbage_collection()
 {
-  //printf("Garbage collection!\n");
+  printf("Garbage collection!\n");
   operationInProgress = 1;
   currentThread->status = EXIT;
   
@@ -206,7 +206,7 @@ void garbage_collection()
   {
     jThread = dequeue(currentThread->joinQueue);
 
-    //printf("Join queue of: %ld join: %ld\n", currentThread->tid, jThread->tid);
+    printf("Join queue of: %ld join: %ld\n", currentThread->tid, jThread->tid);
     jThread->retVal = currentThread->jVal;
 
     insert(&runningQueue, jThread);
@@ -339,6 +339,7 @@ int my_pthread_create(my_pthread_t * thread, my_pthread_attr_t * attr, void *(*f
   //printf("New thread created: TID %ld\n", newThread->tid);
   
   raise(SIGUSR1);
+  
   return 0;
 };
 
@@ -353,7 +354,13 @@ int my_pthread_join(my_pthread_t thread, void **value_ptr)
   operationInProgress = 1;
 
   //make sure thread can't wait on self
-  if(thread == currentThread->tid)  return -1;
+  if(thread == currentThread->tid) {
+    //printf("Thread waiting on self\n");
+    return -1;
+  }
+  
+  
+  
 
   // Search the thread in allThreads
   tcb *tgt = NULL;
@@ -365,7 +372,8 @@ int my_pthread_join(my_pthread_t thread, void **value_ptr)
       break;
     }
   }
-  
+  printf("Join thread %ld\n", tgt->tid);
+  printf("%s %s:%d\n", __func__, __FILE__, __LINE__);
   // if didn't find the thread
   if(tgt == NULL)   return -1;
 
@@ -376,12 +384,15 @@ int my_pthread_join(my_pthread_t thread, void **value_ptr)
 
   operationInProgress = 0;
   raise(SIGUSR1);
-
+  printf("%s %s:%d\n", __func__, __FILE__, __LINE__);
   if(value_ptr == NULL)
-  {return 0;}
+  {
+    printf("%s %s:%d\n", __func__, __FILE__, __LINE__);
+    return 0;
+  }
 
   *value_ptr = currentThread->retVal;
-
+  printf("%s %s:%d\n", __func__, __FILE__, __LINE__);
   return 0;
 };
 
