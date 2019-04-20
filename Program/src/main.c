@@ -245,7 +245,7 @@ int main(int argc, char **argv)
 	socklen_t socket_length;
 	static struct sockaddr_in cli_addr; 
 	static struct sockaddr_in serv_addr;
-	printf("DEBUG: %s %s:%d\n", __func__, __FILE__, __LINE__);
+	//printf("DEBUG: %s %s:%d\n", __func__, __FILE__, __LINE__);
 
 	#if defined(PRETHREADED)
 	sigemptyset(&signal_set);
@@ -335,9 +335,11 @@ int main(int argc, char **argv)
 	
 
 	//Calls to log messages
+	log_event(LOG, "Configuration retrieved from:", "/etc/webserver/config.conf", 0);
 	log_event(LOG, "Directory", directory ,0);
 	log_event(LOG, "Port", port_str ,0);
 	log_event(LOG, "LOG Folder", log_file_path, 0);
+	
 	//------------------------------------
 
 	if( !strncmp(directory,"/"   ,2 ) || !strncmp(directory,"/etc", 5 ) ||
