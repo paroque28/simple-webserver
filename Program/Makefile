@@ -7,11 +7,12 @@ WEBSERVER_DEPS=src/webserver.c
 WEBSERVER_HEADERS=src/webserver.h
 
 default: webserver
-webserver: $(WEBSERVER_DEPS) $(WEBSERVER_HEADERS)
+
+webserver: src/main.c $(WEBSERVER_DEPS) $(WEBSERVER_HEADERS)
 		if [ -z "$(TYPE)" ]; then error "TYPE is not set"; fi
 		$(CC) src/main.c $(WEBSERVER_DEPS) -o webserver -D$(TYPE) -g -ggdb -lpthread
 
-create_n_threads: $(PTHREAD_DEPS) $(PTHREAD_HEADERS)
+create_n_threads: src/test_pthread.c $(PTHREAD_DEPS) $(PTHREAD_HEADERS)
 		$(CC) src/test_pthread.c $(PTHREAD_DEPS) -o create_n_threads -g -ggdb #-lpthread
 
 .PHONY : clean

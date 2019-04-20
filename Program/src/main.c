@@ -1,5 +1,8 @@
 #include "webserver.h"
 
+
+//######### VARIABLES ################
+
 //definition of paths
 char * ROOT_FOLDER= "ROOT_DIR=";
 char * PORT = "PORT=";
@@ -29,14 +32,18 @@ char threads_status[MAX_THREADS] = { 0 };
 sigset_t signal_set;
 int sig;
 
+#endif
+
+
+
+//############## FUNCTIONS ##############
+
 size_t findIndex( const char a[], size_t size, int value )
 {
     size_t index = 0;
     while ( index < size && a[index] != value ) ++index;
     return ( index == size ? -1 : index );
 }
-
-#endif
 
 //This function is used to chop/cut strings
 void slice_str(const char * str, char * buffer, size_t start, size_t end)
@@ -495,58 +502,31 @@ start_child:
 	int temp = 0;
 
 	for (i = 0; i < MAX_THREADS; i++){
-		//printf("%s","Inside Thread Creation Process\n");
-		//temp = findIndex(threads_status, MAX_THREADS , 0);
-		//temp = i;
-		//struct web_args*  initial_args = (struct web_args *)malloc(sizeof(struct web_args));
 		struct web_args*  requested_args = (struct web_args *)malloc(sizeof(struct web_args));
 		requested_args -> thread_id = i;
-		//t_arguments[temp] = (void *)requested_args;
-		//printf("This is requested_args during creation: %i for %i i\n",requested_args,i);
-		//printf("%s","Found Index\n");
 		t_arguments[i] = (void *)requested_args;
-
-		//pthread_create(&threads[request_args->thread_id], NULL, web, t_arguments[request_args->thread_id]);
 		pthread_create(&threads[i], NULL, t_controller, t_arguments[i]);
-		//printf("Before SIGSTOP - thread_id (in list): %i \n",i);
-		//printf("This is Kill SIGSTOP return value: (creation) %i \n", kill(threads[i], SIGSTOP));
-		//printf("This is pthread_Kill SIGSTOP return value: (creation) %i \n", pthread_kill(threads[i], SIGSTOP));
-		//pthread_kill(pthread_t thread, int sig);
-		//printf("After SIGSTOP - threads[i] (thread id in system): %i \n",threads[i]);
 		threads_status[i] = 0;
-		//printf("%s","Thread Created\n");
-		//printf("%s","Thread Status assigned to List\n");
-		//pthread_join(&threads[request_args->thread_id], NULL);
+
 	}
 
 	initial_call_prethreaded = false;
-	//printf("%s","Out of Thread Creation Process\n");
+
 	end: ;
-	//printf("%s","After end: label\n");
+
 	temp = findIndex(threads_status, MAX_THREADS , 0);
 	if (temp == -1){
-		//printf("No aviable threads, trying again");
+
 		goto end;
 	}
-	//printf("Thread id to be assigned work is: %i\n", temp);
-	
-	/*requested_args->thread_id = temp;
-	requested_args->fd = request_args->fd;
-	requested_args->hit = request_args->hit;
-	*/
-	//t_arguments[temp] = (void *)requested_args;
+
 	(((struct web_args*)t_arguments[temp]))->fd = request_args -> fd;
 	(((struct web_args*)t_arguments[temp]))->hit = request_args -> hit;
 
-
-	//printf("Thread id to be assigned work is (from request_args): %i\n", request_args->thread_id);
-	//t_arguments[temp] = (void *)requested_args;
-	//printf("This is t_arguments[temp] after creation: %i\n",t_arguments[temp]);
 	threads_status[temp] = 1;
-	//printf("%s","Before KILL(SIGCONT)\n");
-	//printf("This is pthread_Kill SIGCONT return value: (after creation) %i\n",pthread_kill(threads[temp], SIGCONT));
-	//printf("%s","After KILL(SIGCONT)\n");
-	//printf("After pthread_KILL(SIGCONT) - threads[i] (thread id in system): %i \n",threads[temp]);
+
+	pthread_kill(threads[temp], SIGCONT);
+
 
 	#endif
 
