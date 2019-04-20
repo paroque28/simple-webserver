@@ -10,6 +10,8 @@
 #define benchmarkName "BenchMark.csv"
 #define  bufferSize 1024
 
+void* downloadFile(void *data);
+
 //The client send a querry to the server
 int ReadHttpStatus(int sock){
     char c;
@@ -71,8 +73,92 @@ typedef struct thread_arg {
 	int  ncycle; //Cycle
 	char domain[30]; //Main address
 	char path[30]; //File name
+	int port; //File name
 	
 }thread_arg;
+
+
+
+int main(int argc, char *argv[]){
+ 
+	// # bclient <machine> <port> <file> <N-threads> <N-cycles>
+	
+	clock_t t; //Total Execution time
+	clock_t t2; //Total Execution time
+   
+     
+	if( argc ==6){
+		char machine[20];
+		char file[20];
+		int port=0;
+		int threads=0;
+		int cycles=0;
+		
+		/*Parsing arguments*/
+		strcpy(machine, argv[1]);
+		strcpy(file, argv[3]);
+		threads=atoi(argv[4]);
+		port=atoi(argv[2]);
+		cycles=atoi(argv[5]);
+		
+		
+		FILE* fb=fopen(benchmarkName,"wb");
+		//fwrite(recv_data,1,bytes_received,fb);
+		
+		fprintf(fb,"Machine, %s\n", machine); // 
+		fprintf(fb,"file, %s\n", file); // 
+		fprintf(fb,"Port, %d\n", port); // 
+		fprintf(fb,"Threads,  %d\n", threads); // 
+		fprintf(fb,"Cycles, %d\n", cycles); // 
+		fprintf(fb,"URL, %s:%d/%s\n", machine,port, file);
+		fclose (fb);
+		
+		pthread_t thread_id [threads];  //PTHREAD 1/4
+		//my_pthread_t thread_id[threads];//MYPTHREAD 1/4
+		struct thread_arg arg[threads];
+		
+		// t = clock();
+		clock_t t2 = clock(); 
+    
+		for(int i=0;i<threads;i++){
+			arg[i].nthread = i+1;
+			arg[i].ncycle=cycles;
+
+			strcpy(arg[i].domain, machine);
+			strcpy(arg[i].path,file);
+			arg[i].port=port;
+
+			pthread_create(&thread_id [i], NULL, &downloadFile, &arg[i]);//PTHREAD 2/4
+		    //my_pthread_create(&thread_id[i], NULL, &downloadFile, &arg[i]); //MYPTHREAD 2/4
+
+
+			//arg[i].id = thread_id[i];
+			// printf("In main \nthread id = %ld\n", (long)  arg[i].id );
+			//printf("In main nthread id = %d\n",  arg.nthread );
+
+		} 
+		
+		for(int i=0;i<threads;i++){
+			pthread_join(thread_id [i], NULL);  //PTHREAD 3/4
+			//my_pthread_join(thread_id[i],NULL);	 //MYPTHREAD 3/4
+				
+		}
+		t2 = clock() - t2; 
+				double time_taken = ((double)t2)/CLOCKS_PER_SEC; // in seconds 
+				fb=fopen(benchmarkName,"a");	
+				fprintf(fb, "Total execution time, %f\n", time_taken);
+				fclose(fb);
+
+		
+		  
+	
+	  
+		//pthread_exit(NULL); //PTHREAD 4/4
+		//my_pthread_exit(NULL);//MYPTHREAD 4/4	
+		}
+	return 0;
+}
+
 
 
 
@@ -84,10 +170,15 @@ void* downloadFile(void *data){
 	
 	char domain[30];
 	char path[30];
+	int port;
 
+	port=arg->port;
 
-	strcpy(domain, arg->domain);
-	strcpy(path,arg->path);
+	//sprintf(domain, "%s:%d",  arg->domain, port);
+		sprintf(domain, "%s",  arg->domain);
+	 strcpy(path,arg->path);
+
+	
 	
 	/*Iterates the cycles*/
 	for (int j=1;j<=arg->ncycle;j++){
@@ -99,6 +190,7 @@ void* downloadFile(void *data){
 		struct hostent *he;
 		he = gethostbyname(domain);
 		if (he == NULL){
+		   herror(domain);
 		   herror("gethostbyname");
 		   exit(1);
 		}
@@ -107,7 +199,7 @@ void* downloadFile(void *data){
 		   exit(1);
 		}
 		server_addr.sin_family = AF_INET;     
-		server_addr.sin_port = htons(80);
+		server_addr.sin_port = htons(port);
 		server_addr.sin_addr = *((struct in_addr *)he->h_addr);
 		bzero(&(server_addr.sin_zero),8); 
 		
@@ -122,13 +214,14 @@ void* downloadFile(void *data){
 		}
 		int contentlengh;
 		clock_t t; 
+		
 		t = clock(); 
 		int auxBytes=0;
 		if(ReadHttpStatus(sock) && (contentlengh=ParseHeader(sock))){
 			t = clock() - t; 
 			double time_taken = ((double)t)/CLOCKS_PER_SEC; // in second
 			FILE* fb=fopen(benchmarkName,"a");//	
-			fprintf(fb, "Response time %s,  %f ,\n",thID, time_taken);//Response time of each cycle of each thread.
+			fprintf(fb, "Response time %s,  %f\n",thID, time_taken);//Response time of each cycle of each thread.
 			fclose(fb);
 		int bytes=0;
 		//strcat(thID,path); //Unmark this line if you want to save the file in your computer. Line 1/4
@@ -150,92 +243,31 @@ void* downloadFile(void *data){
 			//fclose(fd);//Unmark this line if you want to save the file in your computer. Line 4/4
 		}
 
-		close(sock);
+		
 		//It measures the bytes received
 		if(j==1){
-			FILE* fb=fopen("BenchMark.csv","a");				
-			fprintf(fb, "Bytes received T%d:, %d, \n",arg->nthread, auxBytes);
+			FILE* fb=fopen(benchmarkName,"a");				
+			fprintf(fb, "File size(bytes), %d\n", auxBytes);
 			fclose(fb);
 		}
-		
-	}
-}
 
 
-
-
-
-
-int main(int argc, char *argv[]){
- 
-	// # bclient <machine> <port> <file> <N-threads> <N-cycles>
+			t = clock() - t; 
+			double time_taken = ((double)t)/CLOCKS_PER_SEC; // in second
+			FILE* fb=fopen(benchmarkName,"a");//	
+			fprintf(fb, "Execution time %s,  %f\n",thID, time_taken);//Response time of each cycle of each thread.
+			fclose(fb);
+			close(sock);
 	
-	clock_t t; //Total Execution time
-   
-     
-	if( argc ==6){
-		char machine[20];
-		char file[20];
-		int port=0;
-		int threads=0;
-		int cycles=0;
-		
-		/*Parsing arguments*/
-		strcpy(machine, argv[1]);
-		strcpy(file, argv[3]);
-		threads=atoi(argv[4]);
-		port=atoi(argv[2]);
-		cycles=atoi(argv[5]);
-		
-		
-		FILE* fb=fopen("BenchMark.csv","wb");
-		//fwrite(recv_data,1,bytes_received,fb);
-		
-		fprintf(fb,"Machine, %s, \n", machine); // 
-		fprintf(fb,"file, %s, \n", file); // 
-		fprintf(fb,"Port, %d, \n", port); // 
-		fprintf(fb,"Threads,  %d, \n", threads); // 
-		fprintf(fb,"Cycles, %d, \n", cycles); // 
-		fprintf(fb,"URL, %s/%s,\n", machine,file);
-		fclose (fb);
-		
-		//pthread_t thread_id[threads];  //PTHREAD 1/4
-		my_pthread_t thread_id[threads];//MYPTHREAD 1/4
-		struct thread_arg arg[threads];
-		
-		 t = clock(); 
-    
-		for(int i=0;i<threads;i++){
-			arg[i].nthread = i+1;
-			arg[i].ncycle=cycles;
-
-			strcpy(arg[i].domain, machine);
-			strcpy(arg[i].path,file);
-			//pthread_create(&thread_id[i], NULL, &downloadFile, &arg[i]);//PTHREAD 2/4
-		    my_pthread_create(&thread_id[i], NULL, &downloadFile, &arg[i]); //MYPTHREAD 2/4
-
-
-			//arg[i].id = thread_id[i];
-			// printf("In main \nthread id = %ld\n", (long)  arg[i].id );
-			//printf("In main nthread id = %d\n",  arg.nthread );
-
-		} 
-		
-		for(int i=0;i<threads;i++){
-			//pthread_join(thread_id[i], NULL);  //PTHREAD 3/4
-			my_pthread_join(thread_id[i],NULL);	 //MYPTHREAD 3/4
-		}
-		  
-		t = clock() - t; 
-		double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
-		fb=fopen("BenchMark.csv","a");	
-		fprintf(fb, "Total execution time, %f\n", time_taken);
-		fclose(fb);
-	  
-		//pthread_exit(NULL); //PTHREAD 4/4
-		my_pthread_exit(NULL);//MYPTHREAD 4/4	
-		}
+			
+	}
 	return 0;
 }
+
+
+
+
+
+
 
 

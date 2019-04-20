@@ -1,0 +1,13 @@
+#!/bin/bash 
+port=8099
+
+cd ..
+./bclient localhost $port test.jpg 1 1
+mv BenchMark.csv ./THREADED/resultCase1.csv
+
+./bclient localhost $port test.jpg 1 1
+mv BenchMark.csv ./THREADED/resultCase2.csv
+
+./bclient localhost $port test.iso 1 1
+mv BenchMark.csv ./THREADED/resultCase3.csv
+

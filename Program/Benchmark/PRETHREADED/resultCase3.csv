@@ -1,0 +1,10 @@
+Machine, localhost
+file, test.iso
+Port, 8099
+Threads,  1
+Cycles, 1
+URL, localhost:8099/test.iso
+Response time T1-C1,  0.000166
+File size(bytes), 524288000
+Execution time T1-C1,  0.541100
+Total execution time, 0.540498

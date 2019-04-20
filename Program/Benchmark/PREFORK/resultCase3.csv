@@ -1,0 +1,6 @@
+Machine, localhost
+file, test.iso
+Port, 8099
+Threads,  1
+Cycles, 1
+URL, localhost:8099/test.iso
