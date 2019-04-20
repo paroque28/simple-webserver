@@ -2,7 +2,7 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
-#include "my_pthread.h"
+#include "my_pthread/my_pthread.h"
 #include <stdlib.h>
 #include <signal.h>
 #ifndef MY_PTHREAD

@@ -44,14 +44,35 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <arpa/inet.h>
 #include <semaphore.h>
 #include <sys/shm.h>
+#include <stdbool.h>
 
 #define BUFSIZE 8096
 #define ERROR 42
 #define SORRY 43
 #define LOG   44
 #define MAX_THREADS 1000
-#if !defined(FORK) && !defined(FIFO) && !defined(THREADED) && !defined(PREFORK)
-#error You must define FORK or FIFO or THREADED before compiling webserver use -D flag on gcc or TYPE= on make
+
+//#define PRETHREADED
+
+
+#ifdef FIFO
+#define TYPE_SELECTED
+#endif
+#ifdef FORK
+#define TYPE_SELECTED
+#endif
+#ifdef THREADED
+#define TYPE_SELECTED
+#endif
+#ifdef PRETHREADED
+#define TYPE_SELECTED
+#endif
+#ifdef PREFORK
+#define TYPE_SELECTED
+#endif
+
+#ifndef TYPE_SELECTED
+#error You must define FORK or FIFO or THREADED or PREFORK or PRETHREADED before compiling webserver use -D flag on gcc or TYPE= on make
 #endif
 
 #if defined(THREADED) || defined(PRETHREADED)
@@ -99,6 +120,7 @@ char * directory = NULL;
 char * log_file_path = NULL;
 char * port_str = NULL;
 int socketfd;
+
 #if defined(PREFORK) || defined(PRETHREADED)
 sem_t *sem;
 int shmid; 
@@ -107,8 +129,15 @@ unsigned int numberOfForks=4;
 unsigned int semaphoreValue=1;
 #endif
 #if defined(THREADED) || defined(PRETHREADED)
+bool initial_call_prethreaded = true;
 pthread_t threads[MAX_THREADS];
+
+void* t_arguments[MAX_THREADS];
+
 char threads_status[MAX_THREADS] = { 0 };
+
+sigset_t signal_set;
+int sig;
 
 size_t findIndex( const char a[], size_t size, int value )
 {
@@ -172,7 +201,7 @@ void* web(void* input)
 	int fd = ((struct web_args*)input)->fd;
 	int hit = ((struct web_args*)input)->hit;
 	int thread_id = ((struct web_args*)input)->thread_id;
-	printf("fd:%d\n",fd);
+
 	if(thread_id != -1){
 		log_event(LOG, "Thread created", "" ,thread_id);
 	}
@@ -186,24 +215,19 @@ void* web(void* input)
 	static 
 	#endif
 	char buffer[BUFSIZE+1];
-	printf("fd:%d\n",fd);
 	ret = read(fd,buffer,BUFSIZE); 
-	printf("ssfd:%d\n",fd);
 	if(ret == 0 || ret == -1) {
 		printf("Error reading :%d\n",fd);
 		perror("Error on read request");
 		log_event(SORRY,"failed to read browser request","",fd);
 	}
-	printf("*fd:%d\n",fd);
 	if(ret > 0 && ret < BUFSIZE)	
 		buffer[ret]=0;	
 	else buffer[0]=0;
-	printf("-fd:%d\n",fd);
 	for(i=0;i<ret;i++)	
 		if(buffer[i] == '\r' || buffer[i] == '\n')
 			buffer[i]='*';
 	log_event(LOG,"request",buffer,hit);
-	printf("+fd:%d\n",fd);
 	if( strncmp(buffer,"GET ",4) && strncmp(buffer,"get ",4) )
 		log_event(SORRY,"Only simple GET operation supported",buffer,fd);
 
@@ -255,6 +279,55 @@ void* web(void* input)
 	}
 #endif
 }
+
+#if defined(PRETHREADED)
+void* t_controller(void* t_args){
+	
+	//printf("Leroy Jenkins!!!\n");
+	int temp = 0;
+	//int dummy = 0;
+	temp = (((struct web_args*)t_args))->thread_id;
+
+	start: ;
+	//printf("Leroy Jenkins!!! - 2\n");
+	sigwait( &signal_set, &sig);
+	//printf("Leroy Jenkins!!! - 3\n");
+	//t_args = t_arguments[temp];
+
+	//printf("Leroy Jenkins!!!\n");
+
+	temp = (((struct web_args*)t_args))->thread_id;
+
+	//printf("Temp in t_controller: %i \n",temp);
+	//printf("t_args in t_controller before while: %i \n",t_args);
+	//while (threads_status[temp] == 0){ //Is the thread to be used?, if not just keep waiting for job.
+		//printf("Goddamnit Leroy! %i\n", temp);
+		//dummy +=1;
+		//dummy = 0;
+		//wait(1);
+	//}
+
+	//t_args = t_arguments[temp];
+
+	//printf("t_args in t_controller after while: %i \n",t_args);
+	//threads_status[temp] == 1;
+	//printf("Before the fall, there is always peace\n");
+
+	web(t_args);
+
+	//printf("I'm dead\n");
+	threads_status[temp] == 0; //free from work, ready for more
+	//printf("Before own stop (is changing because of having SIGSTOP?)\n");
+	//printf("Before own stop) - threads[temp] (thread id in system): %i \n",threads[temp]);
+	//printf("This is pthread_Kill SIGSTOP return value: (t_controller) %i \n", pthread_kill(threads[temp], SIGSTOP));
+	//pthread_kill(pthread_self(), SIGSTOP);
+	
+	//printf("At leats i have chicken \n");
+
+	goto start;
+	//t_controller(t_arguments[temp]);
+}
+#endif
 
 #ifdef PREFORK
 void waiting_fork(int *array ,  sem_t *sem, int i, web_args_t* args);
@@ -310,6 +383,12 @@ int main(int argc, char **argv)
 	static struct sockaddr_in cli_addr; 
 	static struct sockaddr_in serv_addr;
 
+	#if defined(PRETHREADED)
+	sigemptyset(&signal_set);
+	sigaddset(&signal_set, SIGCONT); 
+	sigprocmask(SIG_BLOCK, &signal_set, NULL);
+	#endif
+
 	#if defined(PREFORK)
 	//close semaphore if left open
 	sem_unlink ("pSem");   
@@ -354,7 +433,6 @@ int main(int argc, char **argv)
 			printf("\n\tNot Supported: directories / /etc /bin /lib /tmp /usr /dev /sbin \n");
 		exit(0);
 	}
-
 
 
 	// Read configuration file
@@ -427,7 +505,16 @@ int main(int argc, char **argv)
 
 	log_event(LOG,"HTTP server starting",port_str,getpid());
 
-	
+	#if defined (PRETHREADED)
+	if (initial_call_prethreaded) {
+		
+		for (i = 0; i < MAX_THREADS;i++){
+			struct web_args*  requested_args = (struct web_args *)malloc(sizeof(struct web_args));
+			//printf("%s","Arguments Created\n");
+			t_arguments[i] = (void *)requested_args;
+		}
+	}
+	#endif
 
 	if((listenfd = socket(AF_INET, SOCK_STREAM,0)) <0)
 		log_event(ERROR, "system call","socket",0);
@@ -507,6 +594,71 @@ start_child:
 	threads_status[request_args->thread_id] = 1;
 	//pthread_join(&threads[request_args->thread_id], NULL);
 #endif
+
+#ifdef PRETHREADED
+	//do here the static things
+	////printf("%s","Before Thread Creation Process\n");
+	if (initial_call_prethreaded == false) {
+		//printf("%s","After initial call \n");
+		goto end;
+	}
+	int temp = 0;
+
+	for (i = 0; i < MAX_THREADS; i++){
+		//printf("%s","Inside Thread Creation Process\n");
+		//temp = findIndex(threads_status, MAX_THREADS , 0);
+		//temp = i;
+		//struct web_args*  initial_args = (struct web_args *)malloc(sizeof(struct web_args));
+		struct web_args*  requested_args = (struct web_args *)malloc(sizeof(struct web_args));
+		requested_args -> thread_id = i;
+		//t_arguments[temp] = (void *)requested_args;
+		//printf("This is requested_args during creation: %i for %i i\n",requested_args,i);
+		//printf("%s","Found Index\n");
+		t_arguments[i] = (void *)requested_args;
+
+		//pthread_create(&threads[request_args->thread_id], NULL, web, t_arguments[request_args->thread_id]);
+		pthread_create(&threads[i], NULL, t_controller, t_arguments[i]);
+		//printf("Before SIGSTOP - thread_id (in list): %i \n",i);
+		//printf("This is Kill SIGSTOP return value: (creation) %i \n", kill(threads[i], SIGSTOP));
+		//printf("This is pthread_Kill SIGSTOP return value: (creation) %i \n", pthread_kill(threads[i], SIGSTOP));
+		//pthread_kill(pthread_t thread, int sig);
+		//printf("After SIGSTOP - threads[i] (thread id in system): %i \n",threads[i]);
+		threads_status[i] = 0;
+		//printf("%s","Thread Created\n");
+		//printf("%s","Thread Status assigned to List\n");
+		//pthread_join(&threads[request_args->thread_id], NULL);
+	}
+
+	initial_call_prethreaded = false;
+	//printf("%s","Out of Thread Creation Process\n");
+	end: ;
+	//printf("%s","After end: label\n");
+	temp = findIndex(threads_status, MAX_THREADS , 0);
+	if (temp == -1){
+		//printf("No aviable threads, trying again");
+		goto end;
+	}
+	//printf("Thread id to be assigned work is: %i\n", temp);
+	
+	/*requested_args->thread_id = temp;
+	requested_args->fd = request_args->fd;
+	requested_args->hit = request_args->hit;
+	*/
+	//t_arguments[temp] = (void *)requested_args;
+	(((struct web_args*)t_arguments[temp]))->fd = request_args -> fd;
+	(((struct web_args*)t_arguments[temp]))->hit = request_args -> hit;
+
+
+	//printf("Thread id to be assigned work is (from request_args): %i\n", request_args->thread_id);
+	//t_arguments[temp] = (void *)requested_args;
+	//printf("This is t_arguments[temp] after creation: %i\n",t_arguments[temp]);
+	threads_status[temp] = 1;
+	//printf("%s","Before KILL(SIGCONT)\n");
+	//printf("This is pthread_Kill SIGCONT return value: (after creation) %i\n",pthread_kill(threads[temp], SIGCONT));
+	//printf("%s","After KILL(SIGCONT)\n");
+	//printf("After pthread_KILL(SIGCONT) - threads[i] (thread id in system): %i \n",threads[temp]);
+
+	#endif
 
 //Serial Mode
 #ifdef FIFO

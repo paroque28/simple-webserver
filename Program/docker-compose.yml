@@ -8,7 +8,7 @@ services:
         TYPE: FIFO
     privileged: true
     ports:
-    - "81:8001"
+    - "8001:8001"
     volumes:
     - ./default:/app/default
     - ./webserver-fifo.conf:/etc/webserver/config.conf
@@ -23,7 +23,7 @@ services:
         TYPE: FORK
     privileged: true
     ports:
-    - "82:8002"
+    - "8002:8002"
     volumes:
     - ./default:/app/default
     - ./webserver-fork.conf:/etc/webserver/config.conf
@@ -38,10 +38,25 @@ services:
         TYPE: THREADED
     privileged: true
     ports:
-    - "83:8003"
+    - "8003:8003"
     volumes:
     - ./default:/app/default
     - ./webserver-threaded.conf:/etc/webserver/config.conf
+    - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    tty: true
+    stdin_open: true
+  prethreaded-webserver:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        TYPE: PRETHREADED
+    privileged: true
+    ports:
+    - "8004:8004"
+    volumes:
+    - ./default:/app/default
+    - ./webserver-prethreaded.conf:/etc/webserver/config.conf
     - /sys/fs/cgroup:/sys/fs/cgroup:ro
     tty: true
     stdin_open: true
