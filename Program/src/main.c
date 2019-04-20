@@ -279,13 +279,14 @@ int main(int argc, char **argv)
 	socklen_t socket_length;
 	static struct sockaddr_in cli_addr; 
 	static struct sockaddr_in serv_addr;
+	printf("DEBUG: %s %s:%d\n", __func__, __FILE__, __LINE__);
 
 	#if defined(PRETHREADED)
 	sigemptyset(&signal_set);
 	sigaddset(&signal_set, SIGCONT); 
 	sigprocmask(SIG_BLOCK, &signal_set, NULL);
 	#endif
-
+	printf("DEBUG: %s %s:%d\n", __func__, __FILE__, __LINE__);
 	#if defined(PREFORK)
 	//close semaphore if left open
 	sem_unlink ("pSem");   
@@ -407,7 +408,6 @@ int main(int argc, char **argv)
 		
 		for (i = 0; i < MAX_THREADS;i++){
 			struct web_args*  requested_args = (struct web_args *)malloc(sizeof(struct web_args));
-			//printf("%s","Arguments Created\n");
 			t_arguments[i] = (void *)requested_args;
 		}
 	}
@@ -493,10 +493,7 @@ start_child:
 #endif
 
 #ifdef PRETHREADED
-	//do here the static things
-	////printf("%s","Before Thread Creation Process\n");
 	if (initial_call_prethreaded == false) {
-		//printf("%s","After initial call \n");
 		goto end;
 	}
 	int temp = 0;
