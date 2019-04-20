@@ -15,11 +15,7 @@ char * port_str = NULL;
 int socketfd;
 
 #if defined(PREFORK) || defined(PRETHREADED)
-sem_t *sem;
-int shmid; 
-int shmid_args; 
-unsigned int numberOfForks=4; 
-unsigned int semaphoreValue=1;
+unsigned int numberOfForks=2; 
 #endif
 #if defined(THREADED) || defined(PRETHREADED)
 bool initial_call_prethreaded = true;
@@ -99,9 +95,12 @@ void* web(void* input)
 	int hit = ((struct web_args*)input)->hit;
 	int thread_id = ((struct web_args*)input)->thread_id;
 
+	#ifndef PREFORK 
 	if(thread_id != -1){
 		log_event(LOG, "Thread created", "" ,thread_id);
 	}
+	#endif
+
 	#ifndef PREFORK
 	free(input);
 	#endif
@@ -192,40 +191,11 @@ void* t_controller(void* t_args){
 }
 #endif
 
-#ifdef PREFORK
-void waiting_fork(int *array ,  sem_t *sem, int i, web_args_t* args);
-void working_fork(int *flags ,  sem_t *sem, int i, web_args_t* args){
-    sem_wait (sem);           /* P operation */
-	web_args_t* request_ptr = (args+i);
-	printf("Awoke pid: %d\n",getpid());
-	web_args_t request = *request_ptr;
-	printf("File descriptor : %d, hit %d\n",request.fd, request.hit);
-    flags[i]= 0;              /* increment *p by 0, 1 or 2 based on i */
-    printf ("+Child(%d) is in critical section with PID:(%d)\n", i, flags[i]);
-    sem_post (sem);           /* V operation */
-    web(&request);
-    waiting_fork(flags, sem, i, args);
-}
-void waiting_fork(int *array ,  sem_t *sem, int i, web_args_t* args){
-    sem_wait (sem);           /* P operation */
-    array[i]= getpid();              /* increment *p by 0, 1 or 2 based on i */
-    printf ("*Child(%d) is in critical section with PID:(%d)\n", i, array[i]);
-    sem_post (sem);           /* V operation */
-    printf ("Waiting \n"); 
-    if (kill (getpid(), SIGSTOP) == -1) {
-                    perror ("kill of child failed"); exit (-1);
-    }  
-	printf("Awoke pid: %d\n",getpid());
-    working_fork(array, sem, i, args);
-}
-#endif
+
 void intHandler(int a) {
     perror ("SIGINT received");
 	log_event(LOG, "SIGINT received", "" ,a);
-	#if defined(PREFORK)
-	sem_unlink ("pSem");   
-    sem_close(sem);  
-	#endif
+
 	(void)close(socketfd);
     exit(1);	
 }
@@ -245,48 +215,16 @@ int main(int argc, char **argv)
 	socklen_t socket_length;
 	static struct sockaddr_in cli_addr; 
 	static struct sockaddr_in serv_addr;
-	//printf("DEBUG: %s %s:%d\n", __func__, __FILE__, __LINE__);
+	printf("DEBUG: %s %s:%d\n", __func__, __FILE__, __LINE__);
 
 	#if defined(PRETHREADED)
 	sigemptyset(&signal_set);
 	sigaddset(&signal_set, SIGCONT); 
 	sigprocmask(SIG_BLOCK, &signal_set, NULL);
 	#endif
+	printf("DEBUG: %s %s:%d\n", __func__, __FILE__, __LINE__);
 	#if defined(PREFORK)
-	//close semaphore if left open
-	sem_unlink ("pSem");   
-    sem_close(sem);  
-	key_t key = ftok("shmfile",65); 
-	// shmget returns an identifier in shmid 
-    shmid = shmget(key,sizeof(int)*numberOfForks,0666|IPC_CREAT);
-	int *IPCflags = (int*) shmat(shmid,(void*)0,0); 
-
-	key_t key_args = ftok("shmfile2",66); 
-	// shmget returns an identifier in shmid 
-    shmid_args = shmget(key_args,sizeof(web_args_t)*numberOfForks,0666|IPC_CREAT);
-	web_args_t *IPCwebargs = (web_args_t*) shmat(shmid,(void*)0,0); 
 	
-	//Semaphore
-	sem = sem_open ("pSem", O_CREAT | O_EXCL, 0644, semaphoreValue); 
-	for (i = 0; i < numberOfForks; i++){
-		//printf("Creating new fork from %d\n",numberOfForks);
-        pid = fork();
-		//printf("PID: %d\n", pid);
-        if (pid < 0) {
-        	/* check for error      */
-            sem_unlink ("pSem");   
-            sem_close(sem);  
-            /* unlink prevents the semaphore existing forever */
-            /* if a crash occurs during the execution         */
-            printf ("Fork error.\n");
-        }
-         else if (pid == 0){
-		 	//printf("Hello from new Fork!\n");
-		 	goto start_child;
-            break;  
-		 }
-        
-    }
 	#endif
 	
 	if(  argc < 1  || (argc == 2 && !strcmp(argv[1], "-h")) || argc > 1) {
@@ -296,7 +234,7 @@ int main(int argc, char **argv)
 			printf("\n\tNot Supported: directories / /etc /bin /lib /tmp /usr /dev /sbin \n");
 		exit(0);
 	}
-	
+
 
 	// Read configuration file
 	//------------------------------------
@@ -335,11 +273,9 @@ int main(int argc, char **argv)
 	
 
 	//Calls to log messages
-	log_event(LOG, "Configuration retrieved from:", "/etc/webserver/config.conf", 0);
 	log_event(LOG, "Directory", directory ,0);
 	log_event(LOG, "Port", port_str ,0);
 	log_event(LOG, "LOG Folder", log_file_path, 0);
-	
 	//------------------------------------
 
 	if( !strncmp(directory,"/"   ,2 ) || !strncmp(directory,"/etc", 5 ) ||
@@ -362,12 +298,13 @@ int main(int argc, char **argv)
 	signal(SIGKILL, intHandler);
 	signal(SIGPIPE, SIG_IGN);
 
-	//Close stdout
-	for(i=0;i<32;i++){
-		//(void)close(i);	
-	}
-		
+		for(int i=0;i<32;i++)
+			(void)close(i);	
+	
 	(void)setpgrp();	
+
+
+
 
 	log_event(LOG,"HTTP server starting",port_str,getpid());
 
@@ -394,6 +331,7 @@ int main(int argc, char **argv)
 	}
 	if( listen(listenfd,64) <0)
 		log_event(ERROR,"system call","listen",0);
+#ifndef PREFORK
 
 	for(hit=1; ;hit++) {
 		socket_length = (socklen_t) sizeof(cli_addr);
@@ -411,29 +349,77 @@ int main(int argc, char **argv)
 		request_args->thread_id = -1;
 		signal(SIGPIPE, SIG_IGN);
 		log_event(LOG,"New Request\n","",0);
-		int asda =0;
-#ifdef PREFORK
-		int attended = 0;
-		while(!attended){
-			int f;
-			for(f=0;f<numberOfForks;f++){
-				int child_pid = IPCflags[f];
-				if (child_pid!=0 ) {
-					memcpy(IPCwebargs + f, request_args, sizeof(web_args_t)); 
-					(void)close(socketfd);
-					kill (child_pid, SIGCONT);
-					attended = 1;
-					break;
-				}
-			}
-		}
-		//web(request_args);
-		continue;
-start_child:
-		waiting_fork(IPCflags, sem, i, IPCwebargs);
-		exit(0);
+		
 #endif
-// Multiple forks
+#ifdef PREFORK
+	int h, m;
+
+
+    /* Fork you some child processes. */
+    for (h = 0; h < numberOfForks; h++) {
+	pid = fork();
+	if (pid == -1) {
+	    die("Couldn't fork");
+	}
+
+	if (pid == 0) { // We're in the child ...
+	    for (;;) { // Run forever ...
+		/* Necessary initialization for accept(2) */
+		//socket_length = sizeof client;
+
+		/* Blocks! */
+		if((socketfd = accept(listenfd, (struct sockaddr *)&cli_addr, &socket_length)) < 0)
+			log_event(ERROR,"system call","accept",0);
+		
+		
+		int status;
+		int enable = 1;
+		if (status = setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+    		log_event(ERROR, "Setsocketopts", "Error code" , status);
+		if (status = setsockopt(listenfd, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(int)) < 0)
+    		log_event(ERROR, "Setsocketopts", "Error code" , status);
+		
+		if (status = setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+    		log_event(ERROR, "Setsocketopts", "Error code" , status);
+		 
+		 
+		web_args_t* request_args = (struct web_args *)malloc(sizeof(struct web_args));	
+		request_args->fd = socketfd;
+		request_args->hit = hit;
+		request_args->thread_id = -1;
+		signal(SIGPIPE, SIG_IGN);
+		log_event(LOG,"New Request\n","",0);
+		 
+		 	  FILE * fp;
+
+			/* open the file for writing*/
+			fp = fopen ("/home/geova/Desktop/1.txt","a+");
+			
+			/* write 10 lines of text into the file stream*/
+			fprintf (fp,"cpi %d \n",getpid());
+			fclose (fp);
+
+
+		
+			web(request_args);
+		/* Clean up the client socket */
+	///	close(clientfd);
+	(void)close(socketfd);
+	    }
+	}
+    }
+
+    /* Sit back and wait for all child processes to exit */
+    while (waitpid(-1, NULL, 0) > 0);
+
+    /* Close up our socket */
+   // close(sockfd);
+   (void)close(socketfd);
+
+    return 0;
+
+#endif
+
 #ifdef FORK
 		if((pid = fork()) < 0) {
 			log_event(ERROR,"system call","fork",0);
@@ -499,5 +485,8 @@ start_child:
 #ifdef FIFO
 		web(request_args);
 #endif
+
+#ifndef PREFORK
 	}
+#endif
 }
