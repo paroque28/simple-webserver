@@ -252,7 +252,6 @@ int main(int argc, char **argv)
 	sigaddset(&signal_set, SIGCONT); 
 	sigprocmask(SIG_BLOCK, &signal_set, NULL);
 	#endif
-	printf("DEBUG: %s %s:%d\n", __func__, __FILE__, __LINE__);
 	#if defined(PREFORK)
 	//close semaphore if left open
 	sem_unlink ("pSem");   
@@ -297,7 +296,7 @@ int main(int argc, char **argv)
 			printf("\n\tNot Supported: directories / /etc /bin /lib /tmp /usr /dev /sbin \n");
 		exit(0);
 	}
-
+	
 
 	// Read configuration file
 	//------------------------------------
@@ -360,12 +359,13 @@ int main(int argc, char **argv)
 	signal(SIGINT, intHandler); 
 	signal(SIGKILL, intHandler);
 	signal(SIGPIPE, SIG_IGN);
-	for(i=0;i<32;i++)
-		(void)close(i);	
+
+	//Close stdout
+	for(i=0;i<32;i++){
+		//(void)close(i);	
+	}
+		
 	(void)setpgrp();	
-
-
-
 
 	log_event(LOG,"HTTP server starting",port_str,getpid());
 
