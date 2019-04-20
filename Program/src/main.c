@@ -179,50 +179,16 @@ void* web(void* input)
 
 #if defined(PRETHREADED)
 void* t_controller(void* t_args){
-	
-	//printf("Leroy Jenkins!!!\n");
 	int temp = 0;
-	//int dummy = 0;
 	temp = (((struct web_args*)t_args))->thread_id;
-
 	start: ;
-	//printf("Leroy Jenkins!!! - 2\n");
 	sigwait( &signal_set, &sig);
-	//printf("Leroy Jenkins!!! - 3\n");
-	//t_args = t_arguments[temp];
 
-	//printf("Leroy Jenkins!!!\n");
 
 	temp = (((struct web_args*)t_args))->thread_id;
-
-	//printf("Temp in t_controller: %i \n",temp);
-	//printf("t_args in t_controller before while: %i \n",t_args);
-	//while (threads_status[temp] == 0){ //Is the thread to be used?, if not just keep waiting for job.
-		//printf("Goddamnit Leroy! %i\n", temp);
-		//dummy +=1;
-		//dummy = 0;
-		//wait(1);
-	//}
-
-	//t_args = t_arguments[temp];
-
-	//printf("t_args in t_controller after while: %i \n",t_args);
-	//threads_status[temp] == 1;
-	//printf("Before the fall, there is always peace\n");
-
 	web(t_args);
-
-	//printf("I'm dead\n");
 	threads_status[temp] == 0; //free from work, ready for more
-	//printf("Before own stop (is changing because of having SIGSTOP?)\n");
-	//printf("Before own stop) - threads[temp] (thread id in system): %i \n",threads[temp]);
-	//printf("This is pthread_Kill SIGSTOP return value: (t_controller) %i \n", pthread_kill(threads[temp], SIGSTOP));
-	//pthread_kill(pthread_self(), SIGSTOP);
-	
-	//printf("At leats i have chicken \n");
-
 	goto start;
-	//t_controller(t_arguments[temp]);
 }
 #endif
 
