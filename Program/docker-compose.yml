@@ -60,3 +60,18 @@ services:
     - /sys/fs/cgroup:/sys/fs/cgroup:ro
     tty: true
     stdin_open: true
+  prefork-webserver:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        TYPE: PREFORK
+    privileged: true
+    ports:
+    - "8005:8005"
+    volumes:
+    - ./default:/app/default
+    - ./webserver-prefork.conf:/etc/webserver/config.conf
+    - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    tty: true
+    stdin_open: true
