@@ -1,5 +1,5 @@
 #!/bin/bash 
-port=8099
+port=8007
 
 cd ..
 ./bclient localhost $port test.jpg 1 1
