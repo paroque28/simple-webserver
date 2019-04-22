@@ -1,13 +1,15 @@
-FROM centos/systemd
-ARG TYPE=FIFO
-# Initial install tools and change password
-RUN yum clean all
-RUN rpm --rebuilddb
-RUN yum -y update
-RUN yum -y install make gcc
-RUN echo "root" | passwd --stdin root 
+FROM paroque28/centos-systemd-gcc
 
-
+##########################
+# # Old image without GCC
+# FROM centos/systemd
+# ARG TYPE=FIFO
+# # Initial install tools and change password
+# RUN yum clean all
+# RUN rpm --rebuilddb
+# RUN yum -y update
+# RUN yum -y install make gcc
+# RUN echo "root" | passwd --stdin root 
 ##############################
 
 #Copy files to container
