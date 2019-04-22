@@ -4,7 +4,7 @@ Port, 8099
 Threads,  1
 Cycles, 1
 URL, localhost:8099/test.iso
-Response time T1-C1,  0.000219
+Response time T1-C1,  0.000119
 File size(bytes), 524288000
-Execution time T1-C1,  0.555709
-Total execution time, 0.555275
+Execution time T1-C1,  0.535871
+Total execution time, 0.535419
