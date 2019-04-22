@@ -298,7 +298,7 @@ int main(int argc, char **argv)
 	signal(SIGKILL, intHandler);
 	signal(SIGPIPE, SIG_IGN);
 
-		for(int i=0;i<32;i++)
+		for(i=0;i<32;i++)
 			(void)close(i);	
 	
 	(void)setpgrp();	
