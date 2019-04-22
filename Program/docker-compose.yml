@@ -23,7 +23,7 @@ services:
         TYPE: FORK
     privileged: true
     ports:
-    - "8002:8002"
+    - "8003:8003"
     volumes:
     - ./default:/app/default
     - ./webserver-fork.conf:/etc/webserver/config.conf
@@ -38,7 +38,7 @@ services:
         TYPE: THREADED
     privileged: true
     ports:
-    - "8003:8003"
+    - "8005:8005"
     volumes:
     - ./default:/app/default
     - ./webserver-threaded.conf:/etc/webserver/config.conf
@@ -53,7 +53,7 @@ services:
         TYPE: PRETHREADED
     privileged: true
     ports:
-    - "8004:8004"
+    - "8007:8007"
     volumes:
     - ./default:/app/default
     - ./webserver-prethreaded.conf:/etc/webserver/config.conf
@@ -68,7 +68,7 @@ services:
         TYPE: PREFORK
     privileged: true
     ports:
-    - "8005:8005"
+    - "8009:8009"
     volumes:
     - ./default:/app/default
     - ./webserver-prefork.conf:/etc/webserver/config.conf
