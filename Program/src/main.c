@@ -222,11 +222,9 @@ int main(int argc, char **argv)
 	sigaddset(&signal_set, SIGCONT); 
 	sigprocmask(SIG_BLOCK, &signal_set, NULL);
 	#endif
-	printf("DEBUG: %s %s:%d\n", __func__, __FILE__, __LINE__);
-	#if defined(PREFORK)
-	
-	#endif
-	
+	//printf("DEBUG: %s %s:%d\n", __func__, __FILE__, __LINE__);
+
+
 	if(  argc < 1  || (argc == 2 && !strcmp(argv[1], "-h")) || argc > 1) {
 		printf("Use configuration file at /etc/webserver\nOnly Supports:");
 		for(i=0;extensions[i].ext != 0;i++)
@@ -359,7 +357,9 @@ int main(int argc, char **argv)
     for (h = 0; h < numberOfForks; h++) {
 	pid = fork();
 	if (pid == -1) {
-	    die("Couldn't fork");
+	    log_event(ERROR, "Couldn't fork","",0);
+		perror("Couldn't fork");
+		exit(1);
 	}
 
 	if (pid == 0) { // We're in the child ...
@@ -389,19 +389,10 @@ int main(int argc, char **argv)
 		request_args->thread_id = -1;
 		signal(SIGPIPE, SIG_IGN);
 		log_event(LOG,"New Request\n","",0);
-		 
-		 	  FILE * fp;
-
-			/* open the file for writing*/
-			fp = fopen ("/home/geova/Desktop/1.txt","a+");
-			
-			/* write 10 lines of text into the file stream*/
-			fprintf (fp,"cpi %d \n",getpid());
-			fclose (fp);
-
-
+		/* write 10 lines of text into the file stream*/
+		log_event(LOG,"CPI", " PID", getpid());
 		
-			web(request_args);
+		web(request_args);
 		/* Clean up the client socket */
 	///	close(clientfd);
 	(void)close(socketfd);
