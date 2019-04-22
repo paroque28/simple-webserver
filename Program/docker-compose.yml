@@ -75,3 +75,20 @@ services:
     - /sys/fs/cgroup:/sys/fs/cgroup:ro
     tty: true
     stdin_open: true
+  threaded-mypthread-webserver:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        - TYPE=THREADED
+        - THREAD_LIB=MY_PTHREAD
+        - SCHEDULER=LOTTERY
+    privileged: true
+    ports:
+    - "8011:8005"
+    volumes:
+    - ./default:/app/default
+    - ./webserver-threaded.conf:/etc/webserver/config.conf
+    - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    tty: true
+    stdin_open: true

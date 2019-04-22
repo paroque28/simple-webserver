@@ -1,5 +1,9 @@
 FROM paroque28/centos-systemd-gcc
+
 ARG TYPE=FIFO
+ARG THREAD_LIB=PTHREAD
+ARG SCHEDULER=LOTTERY
+
 ##########################
 # # Old image without GCC
 # FROM centos/systemd 
@@ -15,7 +19,7 @@ ARG TYPE=FIFO
 COPY src/ /app/src
 COPY Makefile /app
 
-RUN make -C /app TYPE=${TYPE}
+RUN make -C /app TYPE=${TYPE} THREAD_LIB=${THREAD_LIB} SCHEDULER=${SCHEDULER}
 RUN mv /app/webserver /usr/bin
 # Create Initial configuration
 RUN mkdir -p /etc/webserver

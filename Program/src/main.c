@@ -26,7 +26,7 @@ void* t_arguments[MAX_THREADS];
 char threads_status[MAX_THREADS] = { 0 };
 
 sigset_t signal_set;
-int sig;
+int sig_int;
 
 #endif
 
@@ -181,7 +181,7 @@ void* t_controller(void* t_args){
 	int temp = 0;
 	temp = (((struct web_args*)t_args))->thread_id;
 	start: ;
-	sigwait( &signal_set, &sig);
+	sigwait( &signal_set, &sig_int);
 
 
 	temp = (((struct web_args*)t_args))->thread_id;
@@ -215,7 +215,14 @@ int main(int argc, char **argv)
 	socklen_t socket_length;
 	static struct sockaddr_in cli_addr; 
 	static struct sockaddr_in serv_addr;
-	printf("DEBUG: %s %s:%d\n", __func__, __FILE__, __LINE__);
+	//printf("DEBUG: %s %s:%d\n", __func__, __FILE__, __LINE__);
+
+	#if defined(THREADED) || defined(PRETHREADED)
+	#ifdef MY_PTHREAD_LIB
+	#warning "MyPthread library included!"
+	my_pthread_setsched(SCHEDULER);
+	#endif 
+	#endif
 
 	#if defined(PRETHREADED)
 	sigemptyset(&signal_set);

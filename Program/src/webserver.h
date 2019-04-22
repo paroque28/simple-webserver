@@ -18,6 +18,7 @@
 #include <sys/shm.h>
 #include <stdbool.h>
 
+
 #define BUFSIZE 8096
 #define ERROR 42
 #define SORRY 43
@@ -48,7 +49,14 @@
 #endif
 
 #if defined(THREADED) || defined(PRETHREADED)
-#include <pthread.h>
+
+	#ifdef MY_PTHREAD_LIB
+		#include "my_pthread/my_pthread.h"
+	#endif
+	#ifndef MY_PTHREAD_LIB
+		#include <pthread.h>
+	#endif
+
 #endif
 
 
