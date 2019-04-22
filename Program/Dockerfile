@@ -1,9 +1,8 @@
 FROM paroque28/centos-systemd-gcc
-
+ARG TYPE=FIFO
 ##########################
 # # Old image without GCC
-# FROM centos/systemd
-# ARG TYPE=FIFO
+# FROM centos/systemd 
 # # Initial install tools and change password
 # RUN yum clean all
 # RUN rpm --rebuilddb
