@@ -7,16 +7,16 @@
 char * ROOT_FOLDER= "ROOT_DIR=";
 char * PORT = "PORT=";
 char * LOG_FILE = "LOGFILE=";
+char * NUMBER_OF_FORKS = "NUMBER_OF_FORKS=";
 
 
 char * directory = NULL;
 char * log_file_path = NULL;
 char * port_str = NULL;
+char * number_of_forks_str = NULL;
 int socketfd;
+unsigned int numberOfForks = 4; 
 
-#if defined(PREFORK) || defined(PRETHREADED)
-unsigned int numberOfForks=2; 
-#endif
 #if defined(THREADED) || defined(PRETHREADED)
 bool initial_call_prethreaded = true;
 pthread_t threads[MAX_THREADS];
@@ -255,6 +255,7 @@ int main(int argc, char **argv)
 	directory = malloc(sizeof(char)*BUFSIZE*2);
 	port_str = malloc(sizeof(char)*BUFSIZE*2);
 	log_file_path=malloc(sizeof(char)*BUFSIZE*2);
+	number_of_forks_str=malloc(sizeof(char)*BUFSIZE*2);
     while ((read = getline(&line, &len, fp)) != -1) {
 		// Get ROOT Folder
 		if (check_phrase(line,ROOT_FOLDER,read,directory)){
@@ -265,6 +266,10 @@ int main(int argc, char **argv)
 		}
 		//Get Logfile
 		else if (check_phrase(line,LOG_FILE,read,log_file_path)){
+		}
+		//Get Logfile
+		else if (check_phrase(line,NUMBER_OF_FORKS,read,number_of_forks_str)){
+			numberOfForks = atoi(number_of_forks_str);
 		}
     }
 	//Close file
@@ -278,9 +283,13 @@ int main(int argc, char **argv)
 	
 
 	//Calls to log messages
+	log_event(LOG, "Configuration from", "/etc/webserver/config.conf" ,1);
 	log_event(LOG, "Directory", directory ,0);
-	log_event(LOG, "Port", port_str ,0);
+	log_event(LOG, "Port", "0.0.0.0" ,port);
 	log_event(LOG, "LOG Folder", log_file_path, 0);
+	#ifdef PREFORK
+	log_event(LOG, "Number of Forks", "", numberOfForks);
+	#endif
 	//------------------------------------
 
 	if( !strncmp(directory,"/"   ,2 ) || !strncmp(directory,"/etc", 5 ) ||
