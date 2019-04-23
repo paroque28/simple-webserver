@@ -3,8 +3,12 @@
 ## Documentation
 [Access here the documentation](doc/documentation.md)
 
+## Automatic Installation
+```bash
+sh install_docker.sh
+```
 
-## Installation
+## Manual Installation (Skip)
 
 ### Ubuntu
 First install docker-ce:
