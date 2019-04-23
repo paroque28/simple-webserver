@@ -87,7 +87,7 @@ int main(int argc, char *argv[]){
 	clock_t t2; //Total Execution time
    
      
-	if( argc ==6){
+	if( argc ==6){/*parameters*/
 		char machine[20];
 		char file[20];
 		int port=0;
@@ -105,6 +105,7 @@ int main(int argc, char *argv[]){
 		FILE* fb=fopen(benchmarkName,"wb");
 		//fwrite(recv_data,1,bytes_received,fb);
 		
+		/* print parameters*/
 		fprintf(fb,"Machine, %s\n", machine); // 
 		fprintf(fb,"file, %s\n", file); // 
 		fprintf(fb,"Port, %d\n", port); // 
@@ -119,7 +120,7 @@ int main(int argc, char *argv[]){
 		
 		// t = clock();
 		clock_t t2 = clock(); 
-    
+    		/* Creating pthread*/
 		for(int i=0;i<threads;i++){
 			arg[i].nthread = i+1;
 			arg[i].ncycle=cycles;
@@ -214,7 +215,7 @@ void* downloadFile(void *data){
 		}
 		int contentlengh;
 		clock_t t; 
-		
+		/*Calculate the time that the server takes to response*/
 		t = clock(); 
 		int auxBytes=0;
 		if(ReadHttpStatus(sock) && (contentlengh=ParseHeader(sock))){
