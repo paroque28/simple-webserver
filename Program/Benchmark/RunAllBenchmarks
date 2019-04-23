@@ -7,13 +7,25 @@
 #of any size)
 #• The client program is going to create <N-threads> that are going to send requests to the
 #corresponding server. Each thread is going to repeat this request <N-cycles> times.
-port=8001
-cd ..
-./bclient localhost $port test.iso 1 1
-mv BenchMark.csv ./FIFO/resultCase1.csv
 
-./bclient localhost $port test.jpg 4 2
-mv BenchMark.csv ./FIFO/resultCase2.csv
+cd FIFO/
+./benchmark
 
-./bclient localhost $port test.jpg 2 4
-mv BenchMark.csv ./FIFO/resultCase3.csv
+cd .. 
+cd FORK/
+./benchmark
+
+
+cd .. 
+cd PREFORK/
+./benchmark
+
+cd .. 
+cd PRETHREADED/
+./benchmark
+
+
+cd .. 
+cd THREADED/
+./benchmark
+

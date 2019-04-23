@@ -2,9 +2,11 @@ Machine, localhost
 file, test.jpg
 Port, 8099
 Threads,  1
-Cycles, 1
+Cycles, 2
 URL, localhost:8099/test.jpg
-Response time T1-C1,  0.000277
+Response time T1-C1,  0.000074
 File size(bytes), 6226
-Execution time T1-C1,  0.002535
-Total execution time, 0.001134
+Execution time T1-C1,  0.001384
+Response time T1-C2,  0.000068
+Execution time T1-C2,  0.001640
+Total execution time, 0.001065

@@ -1,0 +1,25 @@
+Machine, localhost
+file, test.jpg
+Port, 8099
+Threads,  2
+Cycles, 4
+URL, localhost:8099/test.jpg
+Response time T1-C1,  0.000227
+File size(bytes), 6226
+Execution time T1-C1,  0.001268
+Response time T2-C1,  0.000222
+File size(bytes), 6226
+Execution time T2-C1,  0.001389
+Response time T1-C2,  0.000201
+Execution time T1-C2,  0.001805
+Response time T2-C2,  0.000203
+Execution time T2-C2,  0.001931
+Response time T1-C3,  0.000207
+Execution time T1-C3,  0.002299
+Response time T2-C3,  0.000193
+Execution time T2-C3,  0.002420
+Response time T1-C4,  0.000191
+Execution time T1-C4,  0.002776
+Response time T2-C4,  0.000183
+Execution time T2-C4,  0.002955
+Total execution time, 0.002509

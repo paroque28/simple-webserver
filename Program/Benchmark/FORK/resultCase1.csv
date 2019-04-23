@@ -4,7 +4,7 @@ Port, 8099
 Threads,  1
 Cycles, 1
 URL, localhost:8099/test.jpg
-Response time T1-C1,  0.000112
+Response time T1-C1,  0.000078
 File size(bytes), 6226
-Execution time T1-C1,  0.002589
-Total execution time, 0.001200
+Execution time T1-C1,  0.001198
+Total execution time, 0.000641
