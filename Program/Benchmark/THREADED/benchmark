@@ -2,12 +2,12 @@
 port=8009
 
 cd ..
-./bclient localhost $port test.jpg 1 1
+./bclient localhost $port test.iso 1 1
 mv BenchMark.csv ./THREADED/resultCase1.csv
 
-./bclient localhost $port test.jpg 1 2
+./bclient localhost $port test.jpg 2 2
 mv BenchMark.csv ./THREADED/resultCase2.csv
 
-./bclient localhost $port test.iso 1 1
+./bclient localhost $port test.txt 4 1
 mv BenchMark.csv ./THREADED/resultCase3.csv
 
