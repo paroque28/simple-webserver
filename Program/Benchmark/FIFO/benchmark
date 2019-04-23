@@ -15,5 +15,5 @@ mv BenchMark.csv ./FIFO/resultCase1.csv
 ./bclient localhost $port test.jpg 4 2
 mv BenchMark.csv ./FIFO/resultCase2.csv
 
-./bclient localhost $port test.jpg 2 4
+./bclient localhost $port test.txt 2 4
 mv BenchMark.csv ./FIFO/resultCase3.csv
