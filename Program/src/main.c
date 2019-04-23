@@ -172,7 +172,7 @@ void* web(void* input)
 #endif
 	
 #if defined(THREADED) || defined(PRETHREADED)
-	log_event(LOG, "Exiting thread", "" ,thread_id);
+	log_event(LOG, "Exiting thread", "" ,thread_id); //Exit thread status register
 	if(thread_id != -1){
 		threads_status[thread_id] = 0;
 	}
@@ -182,12 +182,12 @@ void* web(void* input)
 #if defined(PRETHREADED)
 void* t_controller(void* t_args){
 	int temp = 0;
-	temp = (((struct web_args*)t_args))->thread_id;
+	temp = (((struct web_args*)t_args))->thread_id; //assignation of arguments
 	start: ;
 	sigwait( &signal_set, &sig_int);
 
 
-	temp = (((struct web_args*)t_args))->thread_id;
+	temp = (((struct web_args*)t_args))->thread_id; //Reassignation of arguments in case they where changed during waiting time
 	web(t_args);
 	threads_status[temp] == 0; //free from work, ready for more
 	goto start;
@@ -451,15 +451,15 @@ int main(int argc, char **argv)
 #endif
 
 #ifdef THREADED
-	request_args->thread_id = findIndex(threads_status, MAX_THREADS , 0);
+	request_args->thread_id = findIndex(threads_status, MAX_THREADS , 0); //Finds non working thread
 	if (request_args->thread_id == -1){
 		log_event(ERROR, "MAX threads ", "" ,0);
 		(void)close(socketfd);
 	}
-	pthread_create(&threads[request_args->thread_id], NULL, web, (void *)request_args);
-	threads_status[request_args->thread_id] = 1;
+	pthread_create(&threads[request_args->thread_id], NULL, web, (void *)request_args); //creates thread to handle the work
+	threads_status[request_args->thread_id] = 1; //updates status
 	#ifdef MY_PTHREAD_LIB
-	raise(SIGVTALRM);
+	raise(SIGVTALRM); 
 	time_t start = time(NULL);
     while (1){
         time_t now = time(NULL);
@@ -476,11 +476,11 @@ int main(int argc, char **argv)
 	int temp = 0;
 	//Creates the required amount of threads and asign them their respective arguments.
 	for (i = 0; i < MAX_THREADS; i++){
-		struct web_args*  requested_args = (struct web_args *)malloc(sizeof(struct web_args));
-		requested_args -> thread_id = i;
-		t_arguments[i] = (void *)requested_args;
-		pthread_create(&threads[i], NULL, t_controller, t_arguments[i]); 
-		threads_status[i] = 0;
+		struct web_args*  requested_args = (struct web_args *)malloc(sizeof(struct web_args)); //adquires memory for arguments
+		requested_args -> thread_id = i; //sets id
+		t_arguments[i] = (void *)requested_args; //assignates memory
+		pthread_create(&threads[i], NULL, t_controller, t_arguments[i]);  //creates thread and assigns pointer to arguments
+		threads_status[i] = 0; //updates status to "free"
 
 	}
 		
