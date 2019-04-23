@@ -17,7 +17,9 @@ char * number_of_forks_str = NULL;
 int socketfd;
 unsigned int numberOfForks = 4; 
 
+//If defined is a command for the compiler so that it ignores this code if the parameter is not defined
 #if defined(THREADED) || defined(PRETHREADED)
+//Definition of variables specific to THREADED and PRETHREADED versions of the server
 bool initial_call_prethreaded = true;
 pthread_t threads[MAX_THREADS];
 
@@ -33,7 +35,7 @@ int sig_int;
 
 
 //############## FUNCTIONS ##############
-
+//Finds the position of the first value in the list that has the input value.
 size_t findIndex( const char a[], size_t size, int value )
 {
     size_t index = 0;
@@ -70,7 +72,7 @@ void log_event(int type, char *s1, char *s2, int num)
         (void)sprintf(logbuffer," INFO: %s:%s:%d",s1, s2,num);
         break;
 	}	
-	
+	//open file
 	if((fd = open(log_file_path, O_CREAT| O_WRONLY | O_APPEND,0644)) >= 0) {
 		(void)write(fd,logbuffer,strlen(logbuffer)); 
 		(void)write(fd,"\n",1);      
@@ -91,6 +93,7 @@ void log_event(int type, char *s1, char *s2, int num)
 //This function is used to control browser requests
 void* web(void* input)
 {
+	//file descriptor definition and assignation
 	int fd = ((struct web_args*)input)->fd;
 	int hit = ((struct web_args*)input)->hit;
 	int thread_id = ((struct web_args*)input)->thread_id;
@@ -175,7 +178,7 @@ void* web(void* input)
 	}
 #endif
 }
-
+//The following function is the function assigned to the threads. This handles the waiting of the thread and the execution of web
 #if defined(PRETHREADED)
 void* t_controller(void* t_args){
 	int temp = 0;
@@ -191,7 +194,7 @@ void* t_controller(void* t_args){
 }
 #endif
 
-
+//Signal handler
 void intHandler(int a) {
     perror ("SIGINT received");
 	log_event(LOG, "SIGINT received", "" ,a);
@@ -208,7 +211,7 @@ int check_phrase(const char * line, const char * phrase, int len_line, char * re
 		} 
 	return 0;
 }
-
+//Main process that creates and assigns work
 int main(int argc, char **argv)
 {
 	int i, port, pid, listenfd, hit;
@@ -304,8 +307,7 @@ int main(int argc, char **argv)
 		perror("ERROR "); 
 		exit(4);
 	}
-
-
+	//signals handling
 	signal(SIGCLD, SIG_IGN); 
 	signal(SIGHUP, SIG_IGN); 
 	signal(SIGINT, intHandler); 
@@ -321,7 +323,8 @@ int main(int argc, char **argv)
 
 
 	log_event(LOG,"HTTP server starting",port_str,getpid());
-
+	
+	//creates the required amount of memory spaces for the arguments to be passed to the threads (only on the first request)
 	#if defined (PRETHREADED)
 	if (initial_call_prethreaded) {
 		
@@ -471,17 +474,17 @@ int main(int argc, char **argv)
 		goto end;
 	}
 	int temp = 0;
-
+	//Creates the required amount of threads and asign them their respective arguments.
 	for (i = 0; i < MAX_THREADS; i++){
 		struct web_args*  requested_args = (struct web_args *)malloc(sizeof(struct web_args));
 		requested_args -> thread_id = i;
 		t_arguments[i] = (void *)requested_args;
-		pthread_create(&threads[i], NULL, t_controller, t_arguments[i]);
+		pthread_create(&threads[i], NULL, t_controller, t_arguments[i]); 
 		threads_status[i] = 0;
 
 	}
-
-	initial_call_prethreaded = false;
+		
+	initial_call_prethreaded = false; //No need for more creations
 
 	end: ;
 
@@ -496,7 +499,7 @@ int main(int argc, char **argv)
 
 	threads_status[temp] = 1;
 
-	pthread_kill(threads[temp], SIGCONT);
+	pthread_kill(threads[temp], SIGCONT); //Tells the thread to be used to begin work
 
 
 	#endif
