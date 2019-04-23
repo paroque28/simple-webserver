@@ -70,6 +70,50 @@ int my_pthread_mutex_lock(my_pthread_mutex_t *mutex)
   return 0;
 };
 
+/* try aquire the mutex lock */
+int my_pthread_mutex_trylock(my_pthread_mutex_t *mutex)
+{
+  //printf("Mutex lock !\n");
+  if(!mainContextInitialized)
+  {
+    initializeGarbageContext();
+    initializeMainContext();
+  }
+  if(!mutex->initialized)
+  {return -1;}
+
+  unsigned long long now = ticks;
+  //printf("now: %lld\n",now);
+  while(ticks < now + 2){
+    //printf("ticks: %lld\n",ticks);
+    //printf("%d\n",ticks < now + 2);
+    //my_sleep(1);
+  }
+  //printf("FInally\n");
+  operationInProgress = 1;
+
+  
+  //printf("Lock status: %d\n",mutex->locked);
+
+  if (__atomic_test_and_set((volatile void *)&mutex->locked,__ATOMIC_RELAXED))
+  {
+    operationInProgress = 0;
+    return 1;
+  }
+
+  if(!mutex->initialized)
+  {
+    mutex->locked = 0;
+    return -1;
+  }
+
+  mutex->holder = currentThread->tid;
+  
+  operationInProgress = 0;
+  //printf("Mutex locked !\n");
+  return 0;
+};
+
 /* release the mutex lock */
 int my_pthread_mutex_unlock(my_pthread_mutex_t *mutex)
 {
@@ -130,3 +174,4 @@ int my_pthread_mutex_destroy(my_pthread_mutex_t *mutex)
   *mutex = m;
   return 0;
 };
+

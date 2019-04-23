@@ -82,7 +82,7 @@ services:
       args:
         - TYPE=THREADED
         - THREAD_LIB=MY_PTHREAD
-        - SCHEDULER=LOTTERY
+        - SCHEDULER=RR
     privileged: true
     ports:
     - "8011:8005"
@@ -92,3 +92,4 @@ services:
     - /sys/fs/cgroup:/sys/fs/cgroup:ro
     tty: true
     stdin_open: true
+    entrypoint: /usr/bin/webserver

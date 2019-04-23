@@ -29,6 +29,7 @@
 #define EXIT 3
 #define JOIN 4
 #define MUTEX_WAIT 5
+#define DETACH 6
 
 
 //Scheduling codes
@@ -75,6 +76,8 @@ int my_pthread_attr_set_rt_params(my_pthread_attr_t* attr, unsigned int period, 
 int my_pthread_yield();
 /* terminate a thread */
 void my_pthread_exit(void *value_ptr);
+/* detach a thread */
+int pthread_detach(my_pthread_t thread);
 /* wait for thread termination */
 int my_pthread_join(my_pthread_t thread, void **value_ptr);
 
@@ -87,6 +90,8 @@ int my_pthread_join(my_pthread_t thread, void **value_ptr);
 int my_pthread_mutex_init(my_pthread_mutex_t *mutex, const my_pthread_mutexattr_t *mutexattr);
 /* aquire the mutex lock */
 int my_pthread_mutex_lock(my_pthread_mutex_t *mutex);
+/* try aquire the mutex lock */
+int my_pthread_mutex_trylock(my_pthread_mutex_t *mutex);
 /* release the mutex lock */
 int my_pthread_mutex_unlock(my_pthread_mutex_t *mutex);
 /* destroy the mutex */
@@ -104,8 +109,10 @@ void my_sleep(unsigned long time);
 #define pthread_yield() my_pthread_yield()
 #define pthread_exit(value_ptr) my_pthread_exit(value_ptr)
 #define pthread_join(thread, value_ptr) my_pthread_join(thread, value_ptr)
+#define pthread_detach(thread) my_pthread_detach(thread)
 #define pthread_mutex_init(mutex, mutexattr) my_pthread_mutex_init(mutex, mutexattr)
 #define pthread_mutex_lock(mutex) my_pthread_mutex_lock(mutex)
+#define pthread_mutex_trylock(mutex) my_pthread_mutex_trylock(mutex)
 #define pthread_mutex_unlock(mutex) my_pthread_mutex_unlock(mutex)
 #define pthread_mutex_destroy(mutex) my_pthread_mutex_destroy(mutex)
 

@@ -234,6 +234,56 @@ int my_pthread_join(my_pthread_t thread, void **value_ptr)
   return 0;
 };
 
+int my_pthread_detach(my_pthread_t thread)
+{
+  if(!mainContextInitialized)
+  {
+    initializeGarbageContext();
+    initializeMainContext();
+  }
+  operationInProgress = 1;
+
+  // Search the thread in allThreads
+  tcb *tgt = NULL;
+  struct node * i = NULL;
+  TAILQ_FOREACH(i, &allThreads, nodes)
+  {
+    if (i->thread->tid == thread){
+      tgt = i->thread;
+      break;
+    }
+  }
+  // if didn't find the thread
+  if(tgt == NULL)   return -1;
+
+  if(currentThread->tid == tgt->tid){
+    getNextThread();
+  }
+
+  removeFromQueue(&runningQueue, tgt);
+
+  tgt->status = DETACH;
+
+  operationInProgress = 0;
+  raise(SIGUSR1);
+
+  return 0;
+};
+
+/* terminate a thread */
+void my_pthread_exit(void *value_ptr)
+{
+  if(!mainContextInitialized)
+  {
+    initializeGarbageContext();
+    initializeMainContext();
+  }
+  // call garbage collection
+  currentThread->jVal = value_ptr;
+  setcontext(&cleanup);
+};
+
+
 //Busy waiting
 void my_sleep(unsigned long seconds){
     time_t start = time(NULL);
