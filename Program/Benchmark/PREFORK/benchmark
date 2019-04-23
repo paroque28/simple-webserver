@@ -1,14 +1,14 @@
 #!/bin/bash 
-port=8099
+port=8009
 #rm -r pids.txt
 
 cd ..
-./bclient localhost $port test.jpg 1 1
+./bclient localhost $port test.iso 1 1
 mv BenchMark.csv ./FORK/resultCase1.csv
 
-./bclient localhost $port test.jpg 1 1
+./bclient localhost $port test.jpg 2 2
 mv BenchMark.csv ./FORK/resultCase2.csv
 
-./bclient localhost $port test.iso 1 1
+./bclient localhost $port test.txt 4 2
 mv BenchMark.csv ./FORK/resultCase3.csv
 
