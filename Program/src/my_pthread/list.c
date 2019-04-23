@@ -1,20 +1,21 @@
 #include "list.h"
-
+// Init queue
 void initQueue(head_t* queue){
   TAILQ_INIT(queue);
 }
-
+// Enqueue
 void enqueue(head_t* queue, tcb* thread){
   node_t * threadNode = malloc(sizeof(node_t));
   threadNode->thread = thread;
   TAILQ_INSERT_TAIL(queue, threadNode, nodes);
 }
+// Insert at head of queue
 void insert(head_t* queue, tcb* thread){
   node_t * threadNode = malloc(sizeof(node_t));
   threadNode->thread = thread;
   TAILQ_INSERT_HEAD(queue, threadNode, nodes);
 }
-
+// Dequeue
 tcb* dequeue(head_t* queue){
   node_t * threadNode = TAILQ_FIRST(queue);
   if (threadNode == NULL) return NULL;
@@ -23,7 +24,7 @@ tcb* dequeue(head_t* queue){
   free(threadNode);
   return thread;
 }
-
+// Remove element from queue
 int removeFromQueue(head_t* queue, tcb* thread){
   struct node * e = NULL;
   int res = 1;
@@ -38,8 +39,7 @@ int removeFromQueue(head_t* queue, tcb* thread){
   }
   return res;
 }
-
-
+// Debug print Queue
 void printQueue(head_t* queue){
 
   struct node * e = NULL;

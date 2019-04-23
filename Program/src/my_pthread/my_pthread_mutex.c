@@ -43,7 +43,7 @@ int my_pthread_mutex_lock(my_pthread_mutex_t *mutex)
 
   
   //printf("Lock status: %d\n",mutex->locked);
-
+ // Atomic test and set the lock
   while(__atomic_test_and_set((volatile void *)&mutex->locked,__ATOMIC_RELAXED))
   {
     //printf("Mutex is locked!\n");
@@ -94,7 +94,7 @@ int my_pthread_mutex_trylock(my_pthread_mutex_t *mutex)
 
   
   //printf("Lock status: %d\n",mutex->locked);
-
+  // If not acquired the lock then return
   if (__atomic_test_and_set((volatile void *)&mutex->locked,__ATOMIC_RELAXED))
   {
     operationInProgress = 0;

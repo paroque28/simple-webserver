@@ -1,5 +1,6 @@
 #include "my_pthread.h"
 
+// Execute on exit (link) of a ucontext
 void garbage_collection()
 {
   //printf("Garbage collection!\n");
@@ -78,7 +79,9 @@ void initializeGarbageContext()
 {
   //Set handler of timer
   signal(SIGVTALRM, scheduler);
+  // Handler for manual reactivation of schedulere
   signal(SIGUSR1, scheduler);
+  // Handler fro manual mutex scheduling interactions
   signal(SIGUSR2, scheduler);
   //set everything to NULL
   initQueue(&allThreads);
@@ -117,6 +120,7 @@ int my_pthread_create(my_pthread_t * thread, my_pthread_attr_t * attr, void *(*f
   task->uc_stack.ss_flags = 0;
   makecontext(task, (void*)function, 1, arg);
   //printf("Context created!\n");
+  // Initialize new thread
   tcb *newThread = (tcb*)malloc(sizeof(tcb));
   newThread->context = task;
   newThread->tid = threadCount;
@@ -169,13 +173,14 @@ int my_pthread_create(my_pthread_t * thread, my_pthread_attr_t * attr, void *(*f
   
   return 0;
 };
-
+// Initialize attributes
 int my_pthread_attr_init (my_pthread_attr_t* attr){
   attr->tickets = DEFAULT_TICKETS;
   attr->period = DEFAULT_PERIOD;
   attr->duration = DEFAULT_DURATION;
   return 0;
 }
+// Set tickets
 int my_pthread_attr_set_tickets(my_pthread_attr_t* attr, unsigned int tickets){
   if(tickets == 0) attr->tickets = 0;
   else attr->tickets = tickets - 1;

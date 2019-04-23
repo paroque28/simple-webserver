@@ -1,5 +1,5 @@
 #include "my_pthread.h"
-
+// Debug print all queues
 void my_pthread_print_queues(){
     printf("\n----------Running Queue--------------\n");
     printQueue(&runningQueue);

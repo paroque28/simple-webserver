@@ -1,10 +1,11 @@
 #include "selfishrr.h"
 
+// Dequeue after updating the indexes of everyting
 tcb* selfishRRgetNextThread(head_t* runningQueue, head_t* newQueue){
     return dequeue(runningQueue);
 }
 
-
+// Indexes are updated with each quantum
 void selfishUpdateScores(head_t* runningQueue, head_t* newQueue){
     //printf("Updating SelfishRR scores!\n");
     node_t* i = NULL;

@@ -1,6 +1,5 @@
 #include "edf.h"
 // Earliest deadline first scheduling
-
 tcb* EDFgetNextThread(head_t* runningQueue, long long now, tcb* currentThread){
     node_t* i = NULL;
     long long earliestDeadline = __LONG_LONG_MAX__;
@@ -12,7 +11,8 @@ tcb* EDFgetNextThread(head_t* runningQueue, long long now, tcb* currentThread){
             return currentThread;
         }
     }
-
+    
+    // Find the earliest deadline 
     TAILQ_FOREACH(i, runningQueue, nodes)
     {   
         long long deadline = (i->thread->lastRun + i->thread->period);
@@ -22,8 +22,12 @@ tcb* EDFgetNextThread(head_t* runningQueue, long long now, tcb* currentThread){
             earliestDeadlineThread = i->thread;
         }
     }
+    //unqueue
     removeFromQueue(runningQueue,earliestDeadlineThread);
+
     if(earliestDeadline < 0) printf("RealTime policies couldn't be met! Continuing as Soft RT\n");
+    //Update last run
     earliestDeadlineThread->lastRun = now;
+
     return earliestDeadlineThread;
 }
