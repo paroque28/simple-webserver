@@ -1,5 +1,5 @@
 #!/bin/bash 
-port=8009
+port=8003
 
 cd ..
 ./bclient localhost $port test.iso 1 1
