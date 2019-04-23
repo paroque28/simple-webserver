@@ -342,6 +342,11 @@ int main(int argc, char **argv)
 		socket_length = (socklen_t) sizeof(cli_addr);
 		if((socketfd = accept(listenfd, (struct sockaddr *)&cli_addr, &socket_length)) < 0)
 			log_event(ERROR,"system call","accept",0);
+		#if defined(THREADED) || defined(PRETHREADED)
+		#ifdef MY_PTHREAD_LIB
+		raise(SIGVTALRM);
+		#endif
+		#endif
 		int status;
 		int enable = 1;
 		if (status = setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
@@ -441,6 +446,14 @@ int main(int argc, char **argv)
 	}
 	pthread_create(&threads[request_args->thread_id], NULL, web, (void *)request_args);
 	threads_status[request_args->thread_id] = 1;
+	#ifdef MY_PTHREAD_LIB
+	raise(SIGVTALRM);
+	time_t start = time(NULL);
+    while (1){
+        time_t now = time(NULL);
+        if(now >= start + 1) break;
+    }
+	#endif
 	//pthread_join(&threads[request_args->thread_id], NULL);
 #endif
 
