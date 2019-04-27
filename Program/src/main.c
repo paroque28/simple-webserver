@@ -189,7 +189,7 @@ void* t_controller(void* t_args){
 
 	temp = (((struct web_args*)t_args))->thread_id; //Reassignation of arguments in case they where changed during waiting time
 	web(t_args);
-	threads_status[temp] == 0; //free from work, ready for more
+	threads_status[temp] = 0; //free from work, ready for more
 	goto start;
 }
 #endif
